@@ -1,0 +1,3 @@
+dataset,time_steps,sensors,start,end,median_interval_minutes,intervals_over_5min,missing_or_zero_percent,observed_min_speed,observed_max_speed
+METR-LA,34272,207,2012-03-01,2012-06-27 23:55:00,5.0,0,8.109350825676486,0.3333333333333333,70.0
+PEMS-BAY,52116,325,2017-01-01,2017-06-30 23:55:00,5.0,1,0.003075978438630983,3.0,85.1

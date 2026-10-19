@@ -1,0 +1,10 @@
+check,value
+LA sensors,207
+LA valid distance rows,291253
+LA matched distance rows,11546
+LA graph links,949
+LA isolated sensors,0
+Bay Area sensors,325
+Bay Area valid distance rows,8033
+Traffic time-series present,0
+Pretrained METR-LA checkpoint present,1

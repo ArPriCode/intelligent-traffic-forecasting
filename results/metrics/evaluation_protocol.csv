@@ -1,0 +1,8 @@
+rule,choice,start,end
+Training,First 70% of timestamps,2012-03-01 00:00:00,2012-05-23 07:05:00
+Validation,"Next 10%, reserved for tuning",2012-05-23 07:10:00,2012-06-04 04:40:00
+Test,"Final 20%, held out",2012-06-04 04:45:00,2012-06-27 23:55:00
+Features,"Speed at t, lags 1/2/5, cyclic time and weekday",,
+Forecast horizons,"5, 15, 30, 60 minutes (1, 3, 6, 12 steps)",,
+Missing values,Zero speed sentinel; causal forward-fill for features,,
+Metrics,"MAE, RMSE, MAPE on valid observed test speeds",,
