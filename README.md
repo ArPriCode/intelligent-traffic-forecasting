@@ -11,6 +11,8 @@ Notebook-first speed forecasting project using five-minute METR-LA and PEMS-BAY 
 
 The traffic files contain speed, not flow or occupancy. Those variables are not fabricated. The METR-LA distance graph is symmetrized and does not provide verified upstream/downstream travel direction.
 
+The GitHub `data/` directory includes a [data README](./data/README.md) that explains the folder contents and how to provide the locally required traffic CSVs. The large user-provided traffic CSVs are intentionally ignored by Git.
+
 ## Quick start
 
 ```bash
@@ -35,6 +37,9 @@ Traffic-Flow-Prediction/
 │   ├── PEMS-BAY.csv
 │   ├── PEMS-BAY-META.csv
 │   └── sensor_graph/
+│       ├── distances_la_2012.csv
+│       ├── graph_sensor_ids.txt
+│       └── graph_sensor_locations.csv
 ├── notebooks/
 │   ├── 01_data_quality.ipynb
 │   ├── 02_eda.ipynb
