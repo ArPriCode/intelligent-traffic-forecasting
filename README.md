@@ -18,7 +18,13 @@ cd Traffic-Flow-Prediction
 python -m pip install -r requirements.txt
 ```
 
-Run notebooks 01–09 in numeric order. Notebook 02 contains short, step-by-step EDA cells and plots. Notebooks 05–08 fit and evaluate models; notebook 09 documents the requirements for optional signal simulation.
+Start the local browser dashboard with:
+
+```bash
+streamlit run src/traffic_prediction/web_app.py
+```
+
+Streamlit prints the local URL (normally `http://localhost:8501`). The dashboard displays saved METR-LA metrics and held-out sample predictions; it does not retrain models. Run notebooks 01–09 in numeric order for the notebook workflow. Notebook 02 contains short, step-by-step EDA cells and plots. Notebooks 05–08 fit and evaluate models; notebook 09 documents the requirements for optional signal simulation.
 
 ## Project layout
 
@@ -45,7 +51,8 @@ Traffic-Flow-Prediction/
 │       ├── features.py
 │       ├── graph.py
 │       ├── metrics.py
-│       └── models.py
+│       ├── models.py
+│       └── web_app.py
 ├── report/
 └── results/
     ├── figures/

@@ -5,3 +5,4 @@ jupyter>=1.0
 scikit-learn>=1.4
 xgboost>=2.0
 torch>=2.0
+streamlit>=1.35

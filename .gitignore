@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 .DS_Store
 *.py[cod]
+*.egg-info/
 data/METR-LA.csv
 data/PEMS-BAY.csv
 data/PEMS-BAY-META.csv
