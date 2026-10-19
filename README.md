@@ -99,6 +99,6 @@ The full comparison includes MAE, RMSE and MAPE for all/peak/off-peak periods in
 
 Install `requirements.txt`, then execute the notebooks in numeric order. Model notebooks save results to `results/metrics/`, `results/predictions/` and `results/figures/`.
 
-The reusable source package can be installed in editable mode with `python -m pip install -e .`. It provides traffic CSV validation and chronological splitting, causal speed-input preparation, lag/calendar feature builders, masked forecast metrics, distance-graph construction, and the PyTorch graph-attention model. The notebooks are unchanged and remain the existing executed workflow.
+The reusable source package can be installed in editable mode with `python -m pip install -e .`. It provides traffic CSV validation and chronological splitting, causal speed-input preparation, lag/calendar feature builders, masked forecast metrics, distance-graph construction, and the PyTorch graph-attention model. See the [`src/` README](./src/README.md) for the source package layout. The notebooks are unchanged and remain the existing executed workflow.
 
 METR-LA/PEMS-BAY data are distributed by the DCRNN authors; follow the dataset terms and citation on the [DCRNN project page](https://github.com/liyaguang/DCRNN). Traffic CSVs and PEMS-BAY metadata are user-provided.
