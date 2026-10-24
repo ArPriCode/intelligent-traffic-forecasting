@@ -8,6 +8,22 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35%2B-FF4B4B.svg)](https://streamlit.io/)
 [![Dataset: Zenodo](https://img.shields.io/badge/Dataset-Zenodo%205146275-024dad.svg)](https://zenodo.org/records/5146275)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Team](https://img.shields.io/badge/Team-Quanta-purple.svg)](#-team-quanta)
+
+---
+
+### 👥 Team Quanta
+
+**Course**: Applied Machine Learning (AML)  
+**Institution**: Newton School of Technology, Rishihood University  
+
+| Student Name | Enrollment Number | Institutional Email |
+| :--- | :---: | :--- |
+| **Arun Kumar Giri** | `2401010099` | [arun.giri2024@nst.rishihood.edu.in](mailto:arun.giri2024@nst.rishihood.edu.in) |
+| **Gaurav Meena** | `2401010169` | [gaurav.meena2024@nst.rishihood.edu.in](mailto:gaurav.meena2024@nst.rishihood.edu.in) |
+| **Mausam Kumar Dwivedi** | `2401010266` | [mausam.dwivedi2024@nst.rishihood.edu.in](mailto:mausam.dwivedi2024@nst.rishihood.edu.in) |
+| **Ritik Atri** | `2401010386` | [ritik.attri2024@nst.rishihood.edu.in](mailto:ritik.attri2024@nst.rishihood.edu.in) |
+| **Daniel Tayal** | `2401010140` | [daniel.tayal2024@nst.rishihood.edu.in](mailto:daniel.tayal2024@nst.rishihood.edu.in) |
 
 ---
 

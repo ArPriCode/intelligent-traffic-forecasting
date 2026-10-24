@@ -1,5 +1,19 @@
 # Traffic Speed Forecasting: AML Baselines and Graph Learning
 
+### Team Quanta
+**Course**: Applied Machine Learning (AML)  
+**Institution**: Newton School of Technology, Rishihood University  
+
+| Student Name | Enrollment Number | Institutional Email |
+| :--- | :---: | :--- |
+| **Arun Kumar Giri** | `2401010099` | [arun.giri2024@nst.rishihood.edu.in](mailto:arun.giri2024@nst.rishihood.edu.in) |
+| **Gaurav Meena** | `2401010169` | [gaurav.meena2024@nst.rishihood.edu.in](mailto:gaurav.meena2024@nst.rishihood.edu.in) |
+| **Mausam Kumar Dwivedi** | `2401010266` | [mausam.dwivedi2024@nst.rishihood.edu.in](mailto:mausam.dwivedi2024@nst.rishihood.edu.in) |
+| **Ritik Atri** | `2401010386` | [ritik.attri2024@nst.rishihood.edu.in](mailto:ritik.attri2024@nst.rishihood.edu.in) |
+| **Daniel Tayal** | `2401010140` | [daniel.tayal2024@nst.rishihood.edu.in](mailto:daniel.tayal2024@nst.rishihood.edu.in) |
+
+---
+
 ## Summary
 
 This project evaluates speed forecasts from METR-LA using persistence, a segment-wise multi-output Random Forest, pooled XGBoost, and a trained Graph Attention Network (GAT). Splits are chronological, missing/zero target speeds are masked, and the test set is evaluated at 5, 15, 30, and 60 minutes. The GAT and fixed graph are implemented and trained. In this run the GAT does not beat the AML tree models on overall MAE; its results and limitations are reported below rather than framed as an improvement.
