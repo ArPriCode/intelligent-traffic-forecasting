@@ -13,7 +13,8 @@
 ---
 
 <p align="center">
-  <img src="image.png" alt="Newton School of Technology Logo" width="500"/>
+  <img src="image.png" alt="Newton School of Technology Logo"
+     width="200" height="150" />
 </p>
 
 ### 👥 Team Quanta
