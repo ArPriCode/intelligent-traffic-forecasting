@@ -554,25 +554,35 @@ Traffic-Flow-Prediction/
 │   └── 09_signal_simulation.ipynb
 ├── report/                               # Project documentation & presentations
 │   ├── main.md                           # Extended research report
-│   ├── main.tex                          # LaTeX manuscript
+│   ├── main.pdf                          # Compiled IEEE 2-column camera-ready paper
+│   ├── main.tex                          # LaTeX IEEE conference manuscript
 │   ├── references.bib                    # BibTeX literature citations
 │   └── slides.tex                        # Beamer presentation slides
 ├── results/                              # Generated research outputs
-│   ├── figures/                          # 28 publication-grade visualization figures
-│   ├── metrics/                          # 20 benchmark CSV tables & PyTorch weights
+│   ├── figures/                          # Publication-grade visualization figures
+│   ├── metrics/                          # Benchmark CSV tables & PyTorch weights
 │   └── predictions/                      # Test split forecast trajectories
+├── scripts/                              # Verification & analysis tools
+│   ├── run_sensor_analysis.py            # PeMS / METR sensor analysis script
+│   └── verify_data.py                    # Dataset & graph integrity checker
 ├── src/                                  # Reusable Python package
 │   ├── README.md                         # Source package documentation
 │   └── traffic_prediction/
-│       ├── __init__.py
-│       ├── data.py
-│       ├── features.py
-│       ├── graph.py
-│       ├── metrics.py
-│       ├── models.py
-│       └── web_app.py
+│       ├── __init__.py                   # Package exports
+│       ├── data.py                       # Chronological split & causal imputation
+│       ├── features.py                   # Causal lags, cyclic time, spatial neighbors
+│       ├── graph.py                      # Gaussian distance adjacency builder
+│       ├── metrics.py                    # Masked MAE, RMSE, MAPE metrics
+│       ├── models.py                     # PyTorch Graph Attention Network
+│       ├── tuning.py                     # Chronological CV & hyperparameter search
+│       └── web_app.py                    # Streamlit visual analytics app
 ├── tests/                                # Automated unit & regression test suite
-│   └── test_pipeline.py                  # Pytest test suite for all modules
+│   ├── test_pipeline.py                  # End-to-end component tests
+│   ├── test_data.py                      # Split boundaries & masking tests
+│   ├── test_features.py                  # Temporal & spatial lag features tests
+│   ├── test_graph.py                     # Distance adjacency structure tests
+│   ├── test_metrics.py                   # Masked evaluation metric tests
+│   └── test_tuning.py                    # Forward-chaining CV tests
 ├── LICENSE                               # MIT Open-Source License
 ├── pyproject.toml                        # Build configuration & packaging specs
 ├── requirements.txt                      # Pinned Python package dependencies
