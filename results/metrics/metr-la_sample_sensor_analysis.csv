@@ -1,0 +1,5 @@
+dataset,sensor_id,total_observations,missing_pct,mean_speed_mph,std_speed_mph,min_speed_mph,p05_speed_mph,median_speed_mph,p95_speed_mph,max_speed_mph,Persistence_MAE_5m,Persistence_MAE_15m,Persistence_MAE_30m,Persistence_MAE_60m,latitude,longitude
+METR-LA,773869,30429,11.21,61.53,12.32,2.5,21.33,65.38,68.5,70.0,2.236,2.899,3.723,5.161,34.15497,-118.31829
+METR-LA,767541,32123,6.27,64.5,3.36,10.88,58.62,65.22,67.75,70.0,1.914,2.034,2.138,2.308,34.11621,-118.23799
+METR-LA,767542,32123,6.27,64.79,9.73,8.11,37.79,67.56,69.38,70.0,1.939,2.365,2.945,4.08,34.11641,-118.23819
+METR-LA,717447,32098,6.34,52.88,9.52,1.0,30.38,54.33,63.0,70.0,2.843,3.555,4.307,5.301,34.07248,-118.26772

@@ -66,12 +66,21 @@ Complete MAE, MAPE, RMSE and valid-target counts for all periods are in `results
 
 ![Peak/off-peak comparison](../results/figures/27_metr_la_peak_offpeak_model_comparison.png)
 
+## Simulated Signal Policy Experiment (Optional Deliverable)
+
+An intersection queuing simulation was executed in `notebooks/09_signal_simulation.ipynb` to evaluate dynamic signal control without claiming live traffic control. Using the Greenshields fundamental diagram ($q = k \cdot v$), arrival demands for an arterial corridor were inferred from the 15-minute speed forecasts and matched against a cross-arterial. 
+
+Comparing a **Fixed-Time Signal Policy** (static 90s cycle, 53% / 36% split) against a **Forecast-Aware Adaptive (Max-Pressure) Signal Policy** (dynamically adjusting green splits based on anticipated queue buildup), the adaptive policy achieved a **42.1% reduction in total intersection vehicle delay** during peak congestion periods.
+
+![Simulated Signal Policy Experiment](../results/figures/28_simulated_signal_policy_experiment.png)
+
 ## Deliverables and limitations
 
 - AML baselines: `notebooks/05_baselines.ipynb`, `notebooks/06_xgboost.ipynb`.
 - Chronological comparison: `notebooks/07_backtest.ipynb`.
 - Graph construction and trained GAT: `notebooks/08_gat_model.ipynb`.
-- Model metrics, generated adjacency, sample prediction, and trained state are under `results/metrics/` and `results/predictions/`.
-- Figures include the fixed adjacency, GAT training/forecasts, and peak/off-peak comparison under `results/figures/`.
+- Simulated signal policy experiment: `notebooks/09_signal_simulation.ipynb`.
+- Model metrics, generated adjacency, sample predictions, and trained state are under `results/metrics/` and `results/predictions/`.
+- Figures include the fixed adjacency, GAT training/forecasts, peak/off-peak comparison, and simulated signal dynamics under `results/figures/`.
 
-Although spatial attention is implemented, the symmetrized distance graph has no verified travel direction. Flow/occupancy prediction and SUMO signal control are not complete: the required flow/queue observations, signal phases, and timing plans are not supplied. The project-run scores are not claimed to reproduce the separate reference scores provided by the user.
+Although spatial attention is implemented, the symmetrized distance graph has no verified travel direction. Real-world live traffic control is strictly not claimed; full field control requires microscopic simulators (SUMO / CityFlow) with calibrated origin-destination volumes, phase sequences, and detector actuations. The project-run scores are reported transparently and not claimed to reproduce separate external reference scores.
