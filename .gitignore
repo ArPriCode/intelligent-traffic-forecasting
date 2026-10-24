@@ -26,3 +26,16 @@ results/*
 !results/predictions/
 !results/predictions/**
 !results/predictions/.gitkeep
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.nav
+*.snm
+*.toc
+.vscode/
+report/slides.pdf
+
+
