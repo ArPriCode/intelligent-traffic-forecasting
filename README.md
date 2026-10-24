@@ -73,7 +73,6 @@
 12. [Repository Layout & Artifact Manifest](#12-repository-layout--artifact-manifest)
 13. [Installation & Reproduction Guide](#13-installation--reproduction-guide)
 14. [Automated Test Suite](#14-automated-test-suite)
-15. [Suggested Pre-reads, Academic Literature & Attribution](#15-suggested-pre-reads-academic-literature--attribution)
 
 ---
 
@@ -650,16 +649,6 @@ Run all tests via:
 ```bash
 pytest -v tests/
 ```
-
----
-
-## 15. Suggested Pre-reads, Academic Literature & Attribution
-
-* **Veličković, P., Cucurull, G., Casanova, A., Romero, A., Liò, P., & Bengio, Y. (2018).** *Graph Attention Networks.* International Conference on Learning Representations (ICLR).
-* **Zheng, G., Xiong, Z., Zang, X., Yue, J., Liu, H., Wei, H., ... & Li, Z. (2019).** *CityFlow: A Multi-Agent Reinforcement Learning Environment for Large Scale Traffic Signal Control.* The World Wide Web Conference (WWW), 3620–3624.
-* **Li, Y., Yu, R., Shahabi, C., & Liu, Y. (2018).** *Diffusion Convolutional Recurrent Neural Network: Data-Driven Traffic Forecasting.* International Conference on Learning Representations (ICLR).
-* **Greenshields, B. D. (1935).** *A Study of Traffic Capacity.* Highway Research Board Proceedings, 14, 448–477.
-* **Webster, F. V. (1958).** *Traffic Signal Settings.* Road Research Technical Paper No. 39, Road Research Laboratory, HMSO, London.
 
 ---
 
