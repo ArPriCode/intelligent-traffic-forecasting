@@ -116,11 +116,13 @@ High-accuracy speed predictions are computationally interesting but operationall
 ## 4. Dataset Inventory & Data Integrity Protocol
 
 ### Dataset Specifications
-1. **METR-LA (Los Angeles County Highway Network)**:
+1. **METR-LA (Metropolitan Los Angeles Highway Network)**:
+   - **Full Form**: **METR-LA** stands for **Metropolitan Los Angeles** (derived from the Los Angeles County Metropolitan Transportation Authority loop detector sensor grid).
    - 207 dual-loop detector stations selected along major Los Angeles freeways.
    - 4 continuous months (March 1, 2012 to June 27, 2012) aggregated at regular 5-minute intervals: **34,272 time-steps**.
    - Raw zero/outage rate: **8.11%**.
-2. **PEMS-BAY (San Francisco Bay Area Highway Network)**:
+2. **PEMS-BAY (Caltrans Performance Measurement System — San Francisco Bay Area)**:
+   - **Full Form**: **PEMS-BAY** stands for **Caltrans Performance Measurement System — San Francisco Bay Area** (District 4).
    - 325 sensor stations situated across District 4 (San Jose, Silicon Valley, San Francisco).
    - 6 continuous months (January 1, 2017 to June 30, 2017) at 5-minute intervals: **52,116 time-steps**.
    - Missingness rate: **0.003%**.

@@ -40,8 +40,8 @@
    - [Masked Evaluation Metrics (MAE, RMSE, MAPE)](#34-masked-evaluation-metrics-mae-rmse-mape)
    - [Traffic Flow Theory & Signal Queuing Dynamics](#35-traffic-flow-theory--signal-queuing-dynamics)
 4. [Datasets & Network Topology](#4-datasets--network-topology)
-   - [METR-LA (Los Angeles County Highway Network)](#41-metr-la-los-angeles-county-highway-network)
-   - [PEMS-BAY (San Francisco Bay Area Highway Network)](#42-pems-bay-san-francisco-bay-area-highway-network)
+   - [METR-LA (Metropolitan Los Angeles Highway Network)](#41-metr-la-metropolitan-los-angeles-highway-network)
+   - [PEMS-BAY (Caltrans Performance Measurement System — San Francisco Bay Area)](#42-pems-bay-caltrans-performance-measurement-system--san-francisco-bay-area)
    - [Sensor Graph Topology & Road Distances](#43-sensor-graph-topology--road-distances)
    - [Data Attribution & Zenodo Repository](#44-data-attribution--zenodo-repository)
 5. [Experimental Protocol & Anti-Leakage Guardrails](#5-experimental-protocol--anti-leakage-guardrails)
@@ -76,7 +76,11 @@
 
 Highway traffic networks are complex spatio-temporal dynamical systems where local disruptions propagate rapidly across interconnected corridors. Traditional Applied Machine Learning (AML) models forecast congestion by treating individual road segments in isolation. However, traffic bottlenecks and shockwaves naturally ripple through upstream and downstream links, creating severe spatial interdependencies.
 
-This project delivers an end-to-end investigation into **traffic speed forecasting and dynamic signal control simulation** using five-minute loop detector observations from the benchmark **METR-LA** (207 sensors) and **PEMS-BAY** (325 sensors) networks. We systematically compare four modeling paradigms across four strategic horizons (**5, 15, 30, and 60 minutes ahead**):
+This project delivers an end-to-end investigation into **traffic speed forecasting and dynamic signal control simulation** using five-minute loop detector observations from two standard benchmark networks:
+* **METR-LA** (**Metropolitan Los Angeles** Highway Network; 207 sensors).
+* **PEMS-BAY** (**Caltrans Performance Measurement System — San Francisco Bay Area**; 325 sensors).
+
+We systematically compare four modeling paradigms across four strategic horizons (**5, 15, 30, and 60 minutes ahead**):
 1. **Persistence Baseline** (Naive last-observation carry-forward).
 2. **Segment-wise Multi-Output Random Forest** (207 independent regressors).
 3. **Pooled Sensor-Aware XGBoost** (Unified gradient boosting model with categorical sensor identity).
@@ -259,7 +263,8 @@ $$\text{Total Delay} = \sum_{t} Q(t) \cdot \Delta t \quad [\text{vehicle-minutes
 
 ## 4. Datasets & Network Topology
 
-### 4.1. METR-LA (Los Angeles County Highway Network)
+### 4.1. METR-LA (Metropolitan Los Angeles Highway Network)
+* **Full Form & Etymology:** **METR-LA** stands for **Metropolitan Los Angeles** (derived from the Los Angeles County Metropolitan Transportation Authority highway loop detector network).
 * **Geography:** Loop detectors embedded across the highway network of Los Angeles County (I-5, I-10, I-105, I-110, I-210, I-405, SR-60, SR-91).
 * **Observation Count:** 34,272 timestamps at continuous 5-minute intervals.
 * **Date Range:** March 1, 2012 to June 27, 2012 (approx. 4 months).
@@ -267,7 +272,8 @@ $$\text{Total Delay} = \sum_{t} Q(t) \cdot \Delta t \quad [\text{vehicle-minutes
 * **Missing Value Rate:** $8.11\%$ (dropouts / zero speeds).
 * **Primary Role:** Serves as the primary benchmark for all comparative model training, validation, GAT graph learning, and backtesting.
 
-### 4.2. PEMS-BAY (San Francisco Bay Area Highway Network)
+### 4.2. PEMS-BAY (Caltrans Performance Measurement System — San Francisco Bay Area)
+* **Full Form:** **PEMS-BAY** stands for **Caltrans Performance Measurement System — San Francisco Bay Area** (District 4).
 * **Geography:** Caltrans PeMS sensors across San Francisco, San Jose, Oakland, and Silicon Valley freeways (US-101, I-880, I-280, SR-85).
 * **Observation Count:** 52,116 timestamps at continuous 5-minute intervals.
 * **Date Range:** January 1, 2017 to June 30, 2017 (6 months).
