@@ -1,12 +1,18 @@
-# Applied Machine Learning (AML) — Comprehensive Technical Defense & Oral Examination Guide
+# Advanced Machine Learning (AML) — Comprehensive Technical Defense & Oral Examination Guide
 ## Project Title: Traffic Flow Prediction and Simulated Signal Control via Graph Attention Networks and Flow Models
-### Course: Applied Machine Learning (AML) | Final Evaluation & Viva Preparation
+### Course: Advanced Machine Learning (AML) | Final Evaluation & Viva Preparation
 
 ---
 
+<p align="center">
+  <img src="image.png" alt="Newton School of Technology Logo" width="300"/>
+</p>
+
 ### 👥 Team Quanta
 
+**Course**: Advanced Machine Learning (AML)  
 **Institution**: Newton School of Technology, Rishihood University  
+**Academic Report**: 📄 [Official Academic Evaluation Report (PDF)](report/AML_report.pdf)
 
 | Student Name | Enrollment Number | Institutional Email |
 | :--- | :---: | :--- |
@@ -20,7 +26,7 @@
 
 ## Executive Summary
 
-This document serves as the primary technical defense guide for presenting this project to an Applied Machine Learning instructor, examiner, or committee. It systematically details the problem formulation, mathematical frameworks, data integrity protocols, machine learning and deep learning architectures, downstream queuing simulations, and anticipated oral examination questions with precise, rigorous answers.
+This document serves as the primary technical defense guide for presenting this project to an Advanced Machine Learning instructor, examiner, or committee. It systematically details the problem formulation, mathematical frameworks, data integrity protocols, machine learning and deep learning architectures, downstream queuing simulations, and anticipated oral examination questions with precise, rigorous answers.
 
 ---
 
@@ -141,7 +147,7 @@ High-accuracy speed predictions are computationally interesting but operationall
 ## 5. Evaluation Protocol: Strict Chronological Split
 
 ### Why Random K-Fold Shuffling Causes Fatal Data Leakage
-In applied machine learning for spatial and temporal processes, randomly shuffling time-steps violates the foundational assumption of independent and identically distributed (i.i.d.) observations. Traffic speed series possess intense temporal autocorrelation:
+In advanced machine learning for spatial and temporal processes, randomly shuffling time-steps violates the foundational assumption of independent and identically distributed (i.i.d.) observations. Traffic speed series possess intense temporal autocorrelation:
 $$\text{Corr}(v_t, v_{t+1}) \approx 0.95$$
 If random K-Fold cross-validation were employed, the model would condition on future timestamps ($t+1$) to predict past timestamps ($t$), producing artificially deflated error metrics that fail immediately in production.
 
@@ -253,7 +259,7 @@ Master Evaluation Table on METR-LA Held-Out Test Partition (6,855 timesteps):
 | **30 minutes** ($H=6$) | MAE / RMSE | 3.12 / 6.13 mph | **2.80 / 5.17 mph** | 3.01 / 5.39 mph | 3.22 / 5.62 mph |
 | **60 minutes** ($H=12$) | MAE / RMSE | 3.46 / 6.54 mph | **3.38 / 5.92 mph** | 3.64 / 6.15 mph | **3.42 / 5.86 mph** |
 
-### Core Applied Machine Learning Insights:
+### Core Advanced Machine Learning Insights:
 1. **The Segment Specialization Advantage**: Segment-wise Random Forest dominates short-horizon MAE because training separate models per station acts as a non-parametric lookup table that isolates segment-specific speed profiles without spatial interference.
 2. **Topological Feature Diffusion at 60 Minutes**: At the 1-hour horizon, local historical lags decay in predictive utility. GAT leverages dynamic attention coefficients to incorporate upstream corridor states, beating naive persistence (**3.42 mph vs. 3.46 mph**).
 

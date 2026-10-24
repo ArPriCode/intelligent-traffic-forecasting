@@ -12,10 +12,15 @@
 
 ---
 
+<p align="center">
+  <img src="image.png" alt="Newton School of Technology Logo" width="320"/>
+</p>
+
 ### 👥 Team Quanta
 
-**Course**: Applied Machine Learning (AML)  
+**Course**: Advanced Machine Learning (AML)  
 **Institution**: Newton School of Technology, Rishihood University  
+**Academic Report**: 📄 [View / Download Official Report (PDF)](report/AML_report.pdf)
 
 | Student Name | Enrollment Number | Institutional Email |
 | :--- | :---: | :--- |
@@ -74,7 +79,7 @@
 
 ## 1. Executive Summary & Abstract
 
-Highway traffic networks are complex spatio-temporal dynamical systems where local disruptions propagate rapidly across interconnected corridors. Traditional Applied Machine Learning (AML) models forecast congestion by treating individual road segments in isolation. However, traffic bottlenecks and shockwaves naturally ripple through upstream and downstream links, creating severe spatial interdependencies.
+Highway traffic networks are complex spatio-temporal dynamical systems where local disruptions propagate rapidly across interconnected corridors. Traditional Advanced Machine Learning (AML) models forecast congestion by treating individual road segments in isolation. However, traffic bottlenecks and shockwaves naturally ripple through upstream and downstream links, creating severe spatial interdependencies.
 
 This project delivers an end-to-end investigation into **traffic speed forecasting and dynamic signal control simulation** using five-minute loop detector observations from two standard benchmark networks:
 * **METR-LA** (**Metropolitan Los Angeles** Highway Network; 207 sensors).
@@ -558,12 +563,8 @@ Traffic-Flow-Prediction/
 │   ├── 07_backtest.ipynb
 │   ├── 08_gat_model.ipynb
 │   └── 09_signal_simulation.ipynb
-├── report/                               # Project documentation & presentations
-│   ├── main.md                           # Extended research report
-│   ├── main.pdf                          # Compiled IEEE 2-column camera-ready paper
-│   ├── main.tex                          # LaTeX IEEE conference manuscript
-│   ├── references.bib                    # BibTeX literature citations
-│   └── slides.tex                        # Beamer presentation slides
+├── report/                               # Academic report
+│   └── AML_report.pdf                    # Official compiled IEEE evaluation report (PDF)
 ├── results/                              # Generated research outputs
 │   ├── figures/                          # Publication-grade visualization figures
 │   ├── metrics/                          # Benchmark CSV tables & PyTorch weights
