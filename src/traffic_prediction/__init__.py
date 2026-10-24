@@ -11,8 +11,11 @@ from traffic_prediction.data import (
     time_split,
 )
 from traffic_prediction.features import (
+    make_enhanced_sensor_features,
     make_panel_features,
+    make_rolling_features,
     make_sensor_features,
+    make_spatial_lag_features,
     time_features,
 )
 from traffic_prediction.graph import build_distance_adjacency
@@ -27,8 +30,11 @@ __all__ = [
     "TimeSplit",
     "build_distance_adjacency",
     "load_speed_csv",
+    "make_enhanced_sensor_features",
     "make_panel_features",
+    "make_rolling_features",
     "make_sensor_features",
+    "make_spatial_lag_features",
     "observed_speeds",
     "peak_mask",
     "prepare_speed_inputs",

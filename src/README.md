@@ -11,10 +11,11 @@ src/
 └── traffic_prediction/
     ├── __init__.py           # Package exports and semantic versioning
     ├── data.py               # Timeline validation, chronological splitting, causal imputation
-    ├── features.py           # Autoregressive speed lags, cyclic calendar embeddings
+    ├── features.py           # Autoregressive speed lags, cyclic calendar embeddings, spatial neighbors
     ├── graph.py              # Thresholded Gaussian distance adjacency builder
     ├── metrics.py            # Masked MAE, RMSE, MAPE over valid positive observations
     ├── models.py             # PyTorch GraphAttentionLayer & GraphAttentionNetwork
+    ├── tuning.py             # Leakage-free forward-chaining chronological cross-validation
     └── web_app.py            # Streamlit dashboard for interactive forecast analysis
 ```
 
@@ -83,7 +84,17 @@ Implements PyTorch spatial graph attention architectures.
 
 ---
 
-### 6. `web_app.py`
+### 6. `tuning.py`
+Provides strictly chronological, forward-chaining cross-validation and hyperparameter search.
+
+* `chronological_cv_splits(n_samples: int, n_splits: int = 3, min_train_fraction: float = 0.5)`:
+  Yields rolling forward-chaining train/val folds ensuring no backward temporal leakage.
+* `tune_random_forest(X, y, param_grid, n_splits=3)`:
+  Performs grid search optimized for masked MAE.
+
+---
+
+### 7. `web_app.py`
 Streamlit application for interactive model evaluation and held-out trajectory visual analytics:
 * Visualizes dataset-level summary statistics and missing rate metrics.
 * Filterable model benchmark tables and dynamic bar charts by period (All, Peak, Off-Peak) and horizon (5, 15, 30, 60 min).
