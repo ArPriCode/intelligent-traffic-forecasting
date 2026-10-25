@@ -29,6 +29,22 @@ def require_result(filename: str, directory: Path) -> Path | None:
     return path
 
 
+def render_dataframe(df: pd.DataFrame, hide_index: bool = True) -> None:
+    """Render a DataFrame with responsive width across modern and legacy Streamlit versions."""
+    try:
+        st.dataframe(df, width="stretch", hide_index=hide_index)
+    except TypeError:
+        st.dataframe(df, use_container_width=True, hide_index=hide_index)
+
+
+def render_image(image_path: str, caption: str | None = None) -> None:
+    """Render an image across modern and legacy Streamlit versions."""
+    try:
+        st.image(image_path, caption=caption, width="stretch")
+    except TypeError:
+        st.image(image_path, caption=caption, use_container_width=True)
+
+
 def run_dashboard() -> None:
     """Render the full Streamlit traffic dashboard."""
     st.set_page_config(
@@ -129,7 +145,7 @@ def run_dashboard() -> None:
                         "valid_test_values": "Valid targets",
                     }
                 )
-                st.dataframe(display_metrics.round(3), hide_index=True, use_container_width=True)
+                render_dataframe(display_metrics.round(3), hide_index=True)
 
     with tab2:
         st.subheader("Held-Out 15-Minute Sample Forecasts")
@@ -179,27 +195,41 @@ def run_dashboard() -> None:
                 .dropna()
                 .sort_index()
             )
-            forecast_models = list(model_series.keys())
+            combined = combined.loc[~combined.index.duplicated(keep="first")]
 
-            f_col1, f_col2 = st.columns([2, 1])
-            with f_col1:
-                selected_models = st.multiselect(
-                    "Forecast Models to Display",
-                    forecast_models,
-                    default=forecast_models,
-                )
-            with f_col2:
-                max_points = max(24, len(combined))
-                window_size = st.slider(
-                    "Visible Timeline (5-min steps)",
-                    min_value=24,
-                    max_value=min(288, max_points),
-                    value=min(144, max_points),
-                    step=12,
-                )
+            if combined.empty:
+                st.warning("No overlapping prediction records found to display.")
+            else:
+                forecast_models = list(model_series.keys())
 
-            columns_to_plot = ["actual_speed", *selected_models]
-            st.line_chart(combined[columns_to_plot].tail(window_size), height=420)
+                f_col1, f_col2 = st.columns([2, 1])
+                with f_col1:
+                    selected_models = st.multiselect(
+                        "Forecast Models to Display",
+                        forecast_models,
+                        default=forecast_models,
+                    )
+                with f_col2:
+                    total_points = len(combined)
+                    if total_points <= 24:
+                        window_size = total_points
+                        st.caption(f"Showing all {total_points} available time steps.")
+                    else:
+                        max_points = min(288, total_points)
+                        default_points = min(144, max_points)
+                        step = 12 if (max_points - 24) >= 12 else 1
+                        window_size = st.slider(
+                            "Visible Timeline (5-min steps)",
+                            min_value=24,
+                            max_value=max_points,
+                            value=default_points,
+                            step=step,
+                        )
+
+                columns_to_plot = ["actual_speed", *selected_models]
+                if not selected_models:
+                    st.info("Select at least one forecast model above to compare against actual speed.")
+                st.line_chart(combined[columns_to_plot].tail(window_size), height=420)
 
     with tab3:
         st.subheader("Sensor Profiling & Baseline Error Growth")
@@ -214,12 +244,17 @@ def run_dashboard() -> None:
 
         if analysis_csv.is_file():
             sensor_df = read_csv(str(analysis_csv))
-            st.dataframe(sensor_df, use_container_width=True, hide_index=True)
+            render_dataframe(sensor_df.round(2), hide_index=True)
         else:
             st.info(f"Sensor analysis CSV not found: {analysis_csv.name}")
 
         if analysis_fig.is_file():
-            st.image(str(analysis_fig), caption=f"{sensor_ds} Sample Sensor Diagnostics & Persistence Degradation")
+            render_image(
+                str(analysis_fig),
+                caption=f"{sensor_ds} Sample Sensor Diagnostics & Persistence Degradation",
+            )
+        else:
+            st.info(f"Sensor analysis figure not found: {analysis_fig.name}")
 
     with tab4:
         st.subheader("Simulated Signal Policy: Fixed vs. Adaptive Control")
@@ -231,7 +266,7 @@ def run_dashboard() -> None:
         sim_fig = FIGURES_PATH / "28_simulated_signal_policy_experiment.png"
 
         if sim_csv.is_file():
-            sim_df = read_csv(str(sim_csv))
+            sim_df = read_csv(str(sim_csv)).copy()
             sim_df["timestamp"] = pd.to_datetime(sim_df["timestamp"])
 
             m1, m2, m3 = st.columns(3)
@@ -256,7 +291,12 @@ def run_dashboard() -> None:
             )
 
         if sim_fig.is_file():
-            st.image(str(sim_fig), caption="Signal Policy Simulation: Queues, Delays, and Adaptive Green Splits")
+            render_image(
+                str(sim_fig),
+                caption="Signal Policy Simulation: Queues, Delays, and Adaptive Green Splits",
+            )
+        else:
+            st.info(f"Signal policy figure not found: {sim_fig.name}")
 
     st.divider()
     st.info(
@@ -266,7 +306,4 @@ def run_dashboard() -> None:
 
 
 if __name__ == "__main__":
-    run_dashboard()
-else:
-    # When imported by Streamlit runner
     run_dashboard()
