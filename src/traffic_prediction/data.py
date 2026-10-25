@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -88,7 +89,8 @@ def prepare_speed_inputs(
     if statistic not in {"mean", "median"}:
         raise ValueError("statistic must be 'mean' or 'median'.")
 
-    with np.errstate(invalid="ignore"):
+    with warnings.catch_warnings(), np.errstate(invalid="ignore"):
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*All-NaN.*")
         fill_values = (
             np.nanmean(values[:train_end], axis=0)
             if statistic == "mean"

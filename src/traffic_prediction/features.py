@@ -9,7 +9,7 @@ import pandas as pd
 def time_features(index: pd.DatetimeIndex) -> np.ndarray:
     """Encode time-of-day and weekday as cyclic sine/cosine features."""
     minute = (index.hour * 60 + index.minute).to_numpy()
-    weekday = index.dayofweek.to_numpy()
+    weekday = getattr(index, "day_of_week", getattr(index, "dayofweek", None)).to_numpy()
     time_angle = 2 * np.pi * minute / 1440
     weekday_angle = 2 * np.pi * weekday / 7
     return np.column_stack(
@@ -59,6 +59,8 @@ def make_sensor_features(
     speed = np.asarray(speed_inputs, dtype=np.float32)
     clock = np.asarray(calendar_features, dtype=np.float32)
     times = np.asarray(time_rows, dtype=np.int64)
+    if not (0 <= sensor_index < speed.shape[1]):
+        raise IndexError("sensor_index falls outside the available sensor dimension.")
     _validate_rows(speed, times, np.full(len(times), sensor_index), 5)
     if clock.shape != (speed.shape[0], 4):
         raise ValueError("calendar_features must have shape (timestamps, 4).")
@@ -128,6 +130,8 @@ def make_spatial_lag_features(
         or adj.shape[0] != speed.shape[1]
     ):
         raise ValueError("adjacency must match square sensor dimension.")
+    if not (0 <= sensor_index < speed.shape[1]):
+        raise IndexError("sensor_index falls outside the available sensor dimension.")
     _validate_rows(speed, times, np.full(len(times), sensor_index), 5)
 
     weights = adj[sensor_index].copy()
@@ -155,6 +159,10 @@ def make_rolling_features(
     """Compute causal rolling window mean and standard deviation."""
     speed = np.asarray(speed_inputs, dtype=np.float32)
     times = np.asarray(time_rows, dtype=np.int64)
+    if not window_sizes or any(w <= 0 for w in window_sizes):
+        raise ValueError("window_sizes must be non-empty and contain positive integers.")
+    if not (0 <= sensor_index < speed.shape[1]):
+        raise IndexError("sensor_index falls outside the available sensor dimension.")
     max_window = max(window_sizes)
     _validate_rows(speed, times, np.full(len(times), sensor_index), max_window)
 

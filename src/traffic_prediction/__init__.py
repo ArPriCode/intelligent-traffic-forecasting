@@ -20,15 +20,27 @@ from traffic_prediction.features import (
 )
 from traffic_prediction.graph import build_distance_adjacency
 from traffic_prediction.metrics import peak_mask, regression_metrics
+from traffic_prediction.tuning import (
+    chronological_cv_splits,
+    evaluate_masked_mae,
+    tune_random_forest,
+    tune_xgboost,
+)
 
 if TYPE_CHECKING:
-    from traffic_prediction.models import GraphAttentionNetwork
+    from traffic_prediction.models import (
+        GraphAttentionLayer,
+        GraphAttentionNetwork,
+    )
 
 __all__ = [
     "HORIZON_STEPS",
+    "GraphAttentionLayer",
     "GraphAttentionNetwork",
     "TimeSplit",
     "build_distance_adjacency",
+    "chronological_cv_splits",
+    "evaluate_masked_mae",
     "load_speed_csv",
     "make_enhanced_sensor_features",
     "make_panel_features",
@@ -41,12 +53,14 @@ __all__ = [
     "regression_metrics",
     "time_features",
     "time_split",
+    "tune_random_forest",
+    "tune_xgboost",
 ]
 
 
 def __getattr__(name: str) -> object:
-    if name == "GraphAttentionNetwork":
-        from traffic_prediction.models import GraphAttentionNetwork
+    if name in ("GraphAttentionNetwork", "GraphAttentionLayer"):
+        import traffic_prediction.models as models
 
-        return GraphAttentionNetwork
+        return getattr(models, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

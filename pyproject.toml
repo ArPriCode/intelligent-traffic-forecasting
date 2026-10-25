@@ -13,8 +13,24 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ml = [
+    "scikit-learn>=1.4",
+    "xgboost>=2.0",
+]
 gat = ["torch>=2.0"]
 web = ["streamlit>=1.35"]
+viz = ["matplotlib>=3.8"]
+test = [
+    "pytest>=8.0",
+]
+all = [
+    "scikit-learn>=1.4",
+    "xgboost>=2.0",
+    "torch>=2.0",
+    "streamlit>=1.35",
+    "matplotlib>=3.8",
+    "pytest>=8.0",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -25,10 +41,12 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore::pandas.errors.Pandas4Warning",
+]
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]
 extraPaths = ["src"]
-pythonPath = "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
-
-
+venvPath = "."
+venv = ".venv"

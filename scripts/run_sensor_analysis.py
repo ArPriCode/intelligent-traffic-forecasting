@@ -28,6 +28,8 @@ def analyze_sensors(
     sensor_ids: list[str] | None = None,
     dataset: str = "metr-la",
     plot_hours: int = 48,
+    custom_df: pd.DataFrame | None = None,
+    save_artifacts: bool = True,
 ) -> pd.DataFrame:
     """Analyze speed distributions, persistence forecasting, and temporal patterns."""
     if dataset.lower() in ("pems-bay", "bay"):
@@ -41,11 +43,16 @@ def analyze_sensors(
         default_sensors = ["773869", "767541", "767542", "717447"]
         ds_name = "METR-LA"
 
-    if not csv_file.exists():
-        raise FileNotFoundError(f"Traffic dataset not found at {csv_file}")
-
-    print(f"Loading {ds_name} dataset from {csv_file}...")
-    df = pd.read_csv(csv_file, index_col=0, parse_dates=True).astype("float32")
+    if custom_df is not None:
+        df = custom_df.copy().astype("float32")
+    else:
+        if not csv_file.exists():
+            raise FileNotFoundError(
+                f"Traffic dataset not found at {csv_file}. "
+                f"Please download or place {ds_name}.csv into data/ directory (see data/README.md)."
+            )
+        print(f"Loading {ds_name} dataset from {csv_file}...")
+        df = pd.read_csv(csv_file, index_col=0, parse_dates=True).astype("float32")
     df.columns = df.columns.astype(str)
     # Mask non-positive speeds as NaN
     df = df.where(df > 0)
@@ -122,9 +129,10 @@ def analyze_sensors(
         records.append(rec)
 
     metrics_df = pd.DataFrame(records)
-    metrics_path = RESULTS_METRICS / f"{dataset.lower()}_sample_sensor_analysis.csv"
-    metrics_df.to_csv(metrics_path, index=False)
-    print(f"Saved sensor metrics table to {metrics_path}")
+    if save_artifacts:
+        metrics_path = RESULTS_METRICS / f"{dataset.lower()}_sample_sensor_analysis.csv"
+        metrics_df.to_csv(metrics_path, index=False)
+        print(f"Saved sensor metrics table to {metrics_path}")
 
     # Plot 4-panel analysis figure
     fig, axes = plt.subplots(2, 2, figsize=(14, 9), dpi=200)
@@ -178,11 +186,12 @@ def analyze_sensors(
     ax4.legend(loc="upper left", fontsize=8)
 
     plt.tight_layout()
-    fig_name = f"29_{dataset.lower()}_sample_sensor_analysis.png"
-    fig_path = RESULTS_FIG / fig_name
-    plt.savefig(fig_path, bbox_inches="tight")
+    if save_artifacts:
+        fig_name = f"29_{dataset.lower()}_sample_sensor_analysis.png"
+        fig_path = RESULTS_FIG / fig_name
+        plt.savefig(fig_path, bbox_inches="tight")
+        print(f"Saved sensor analysis plot to {fig_path}")
     plt.close()
-    print(f"Saved sensor analysis plot to {fig_path}")
 
     return metrics_df
 

@@ -8,11 +8,17 @@ from typing import Any, Generator
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 
+# Pre-import torch if installed to avoid OpenMP runtime collision with xgboost on macOS
+try:
+    import torch
+except Exception:
+    pass
+
 try:
     from xgboost import XGBRegressor
 
     HAS_XGBOOST = True
-except ImportError:
+except Exception:
     HAS_XGBOOST = False
 
 
@@ -30,6 +36,8 @@ def chronological_cv_splits(
         raise ValueError("n_samples must be at least 10.")
     if n_splits < 1:
         raise ValueError("n_splits must be at least 1.")
+    if not 0 < min_train_fraction < 1:
+        raise ValueError("min_train_fraction must be between 0 and 1.")
 
     min_train = int(n_samples * min_train_fraction)
     remaining = n_samples - min_train
@@ -49,6 +57,8 @@ def evaluate_masked_mae(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Compute MAE over positive finite observations."""
     y_t = np.asarray(y_true, dtype=np.float64)
     y_p = np.asarray(y_pred, dtype=np.float64)
+    if y_t.shape != y_p.shape:
+        raise ValueError("y_true and y_pred must have the same shape.")
     mask = np.isfinite(y_t) & (y_t > 0) & np.isfinite(y_p)
     if not mask.any():
         return float("inf")
@@ -60,11 +70,15 @@ def tune_random_forest(
     y: np.ndarray,
     param_grid: dict[str, list[Any]] | None = None,
     n_splits: int = 3,
+    min_train_fraction: float = 0.5,
+    n_jobs: int = -1,
     random_state: int = 42,
 ) -> dict[str, Any]:
     """Perform chronological grid search for Random Forest regressor."""
     X_arr = np.asarray(X, dtype=np.float32)
     y_arr = np.asarray(y, dtype=np.float32)
+    if X_arr.ndim != 2:
+        raise ValueError("X must be a 2D array of features.")
     if len(X_arr) != len(y_arr):
         raise ValueError("X and y must have the same number of rows.")
 
@@ -73,7 +87,12 @@ def tune_random_forest(
         "max_depth": [6, 10],
         "min_samples_leaf": [4, 8],
     }
-    grid = param_grid or default_grid
+    grid = param_grid if param_grid is not None else default_grid
+    if not grid or any(len(v) == 0 for v in grid.values()):
+        raise ValueError(
+            "param_grid must not be empty and all parameter value lists must be non-empty."
+        )
+
     keys = list(grid.keys())
     combinations = [
         dict(zip(keys, prod)) for prod in itertools.product(*grid.values())
@@ -83,16 +102,17 @@ def tune_random_forest(
     best_params = combinations[0]
     results = []
 
-    splits = list(chronological_cv_splits(len(X_arr), n_splits=n_splits))
+    splits = list(
+        chronological_cv_splits(
+            len(X_arr), n_splits=n_splits, min_train_fraction=min_train_fraction
+        )
+    )
 
     for params in combinations:
         fold_scores = []
         for train_idx, val_idx in splits:
-            model = RandomForestRegressor(
-                **params,
-                n_jobs=-1,
-                random_state=random_state,
-            )
+            model_params = {"n_jobs": n_jobs, "random_state": random_state, **params}
+            model = RandomForestRegressor(**model_params)
             model.fit(X_arr[train_idx], y_arr[train_idx])
             preds = model.predict(X_arr[val_idx])
             score = evaluate_masked_mae(y_arr[val_idx], preds)
@@ -118,14 +138,20 @@ def tune_xgboost(
     y: np.ndarray,
     param_grid: dict[str, list[Any]] | None = None,
     n_splits: int = 3,
+    min_train_fraction: float = 0.5,
+    n_jobs: int = 1,
     random_state: int = 42,
 ) -> dict[str, Any]:
     """Perform chronological grid search for XGBoost regressor."""
     if not HAS_XGBOOST:
-        raise ImportError("xgboost is not installed.")
+        raise ImportError(
+            "xgboost is not installed or its native C++ runtime (e.g. OpenMP/libomp) could not be loaded."
+        )
 
     X_arr = np.asarray(X, dtype=np.float32)
     y_arr = np.asarray(y, dtype=np.float32)
+    if X_arr.ndim != 2:
+        raise ValueError("X must be a 2D array of features.")
     if len(X_arr) != len(y_arr):
         raise ValueError("X and y must have the same number of rows.")
 
@@ -134,7 +160,12 @@ def tune_xgboost(
         "max_depth": [4, 6],
         "learning_rate": [0.05, 0.1],
     }
-    grid = param_grid or default_grid
+    grid = param_grid if param_grid is not None else default_grid
+    if not grid or any(len(v) == 0 for v in grid.values()):
+        raise ValueError(
+            "param_grid must not be empty and all parameter value lists must be non-empty."
+        )
+
     keys = list(grid.keys())
     combinations = [
         dict(zip(keys, prod)) for prod in itertools.product(*grid.values())
@@ -144,16 +175,17 @@ def tune_xgboost(
     best_params = combinations[0]
     results = []
 
-    splits = list(chronological_cv_splits(len(X_arr), n_splits=n_splits))
+    splits = list(
+        chronological_cv_splits(
+            len(X_arr), n_splits=n_splits, min_train_fraction=min_train_fraction
+        )
+    )
 
     for params in combinations:
         fold_scores = []
         for train_idx, val_idx in splits:
-            model = XGBRegressor(
-                **params,
-                n_jobs=-1,
-                random_state=random_state,
-            )
+            model_params = {"n_jobs": n_jobs, "random_state": random_state, **params}
+            model = XGBRegressor(**model_params)
             model.fit(X_arr[train_idx], y_arr[train_idx])
             preds = model.predict(X_arr[val_idx])
             score = evaluate_masked_mae(y_arr[val_idx], preds)
