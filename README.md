@@ -9,6 +9,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35%2B-FF4B4B.svg)](https://streamlit.io/)
 [![Dataset: Zenodo](https://img.shields.io/badge/Dataset-Zenodo%205146275-024dad.svg)](https://zenodo.org/records/5146275)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Team ID](https://img.shields.io/badge/Team%20ID-T020-blue.svg)](#-team-quanta)
 [![Team](https://img.shields.io/badge/Team-Quanta-purple.svg)](#-team-quanta)
 
 ---
@@ -25,11 +26,12 @@
   </tr>
 </table>
 
-### 👥 Team Quanta
+### 👥 Team Quanta (Team ID: T020)
 
+**Team ID**: `T020`  
 **Course**: Advanced Machine Learning (AML)  
 **Institution**: Newton School of Technology, Rishihood University  
-**Academic Report**: 📄 [View / Download Official Report (PDF)](report/AML_report.pdf)
+**Academic Report**: 📄 [View / Download Official Report (PDF)](report/Team_T020_Report.pdf)
 
 | Student Name | Enrollment Number | Institutional Email |
 | :--- | :---: | :--- |
@@ -572,7 +574,7 @@ Traffic-Flow-Prediction/
 │   ├── 08_gat_model.ipynb
 │   └── 09_signal_simulation.ipynb
 ├── report/                               # Academic report
-│   └── AML_report.pdf                    # Official compiled IEEE evaluation report (PDF)
+│   └── Team_T020_Report.pdf              # Official compiled IEEE evaluation report (PDF)
 ├── results/                              # Generated research outputs
 │   ├── figures/                          # Publication-grade visualization figures
 │   ├── metrics/                          # Benchmark CSV tables & PyTorch weights
