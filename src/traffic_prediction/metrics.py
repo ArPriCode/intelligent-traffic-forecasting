@@ -41,7 +41,10 @@ def peak_mask(
         target_index = timestamps[rows]
 
     hours = target_index.hour.to_numpy()
-    weekdays = getattr(target_index, "day_of_week", getattr(target_index, "dayofweek", None)).to_numpy()
+    dow = getattr(target_index, "day_of_week", None)
+    if dow is None:
+        dow = target_index.dayofweek
+    weekdays = np.asarray(dow)
     return (weekdays < 5) & (
         ((hours >= 7) & (hours < 10)) | ((hours >= 16) & (hours < 19))
     )

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -152,11 +153,11 @@ def run_dashboard() -> None:
             if not {"timestamp", "actual_speed", prediction_column}.issubset(frame.columns):
                 st.error(f"Saved forecast file `{filename}` has an unexpected column format.")
                 st.stop()
-            frame = frame[["timestamp", "actual_speed", prediction_column]].rename(
-                columns={prediction_column: model_name}
-            )
+            frame = frame[["timestamp", "actual_speed", prediction_column]].copy()
+            frame.columns = pd.Index(["timestamp", "actual_speed", model_name])
             frame["timestamp"] = pd.to_datetime(frame["timestamp"], errors="coerce")
-            prediction_tables[model_name] = frame.dropna(subset=["timestamp"]).set_index("timestamp")
+            valid_mask = pd.notna(frame["timestamp"])
+            prediction_tables[model_name] = frame.loc[valid_mask].set_index("timestamp")
 
         if missing_prediction_files:
             st.error(f"Missing saved forecast files: {', '.join(missing_prediction_files)}")
@@ -218,12 +219,14 @@ def run_dashboard() -> None:
             sim_df["timestamp"] = pd.to_datetime(sim_df["timestamp"])
 
             m1, m2, m3 = st.columns(3)
-            tot_fixed_delay = sim_df["delay_fixed_veh_min"].sum()
-            tot_adapt_delay = sim_df["delay_adapt_veh_min"].sum()
+            fixed_vals = np.asarray(sim_df["delay_fixed_veh_min"], dtype=np.float64)
+            adapt_vals = np.asarray(sim_df["delay_adapt_veh_min"], dtype=np.float64)
+            tot_fixed_delay = float(np.sum(fixed_vals))
+            tot_adapt_delay = float(np.sum(adapt_vals))
             delay_reduction = (
                 (tot_fixed_delay - tot_adapt_delay) / tot_fixed_delay * 100
                 if tot_fixed_delay > 0
-                else 0
+                else 0.0
             )
 
             m1.metric("Fixed Total Delay", f"{tot_fixed_delay:.1f} veh-min")

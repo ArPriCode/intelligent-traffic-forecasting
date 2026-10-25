@@ -9,7 +9,10 @@ import pandas as pd
 def time_features(index: pd.DatetimeIndex) -> np.ndarray:
     """Encode time-of-day and weekday as cyclic sine/cosine features."""
     minute = (index.hour * 60 + index.minute).to_numpy()
-    weekday = getattr(index, "day_of_week", getattr(index, "dayofweek", None)).to_numpy()
+    dow = getattr(index, "day_of_week", None)
+    if dow is None:
+        dow = index.dayofweek
+    weekday = np.asarray(dow)
     time_angle = 2 * np.pi * minute / 1440
     weekday_angle = 2 * np.pi * weekday / 7
     return np.column_stack(

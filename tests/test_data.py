@@ -75,10 +75,10 @@ def test_prepare_speed_inputs_causal_forward_fill():
 
 def test_prepare_speed_inputs_invalid_inputs():
     with pytest.raises(ValueError, match="statistic must be"):
-        prepare_speed_inputs(np.ones((5, 2)), train_end=3, statistic="mode")
+        prepare_speed_inputs(np.ones((5, 2), dtype=np.float32), train_end=3, statistic="mode")
 
     with pytest.raises(ValueError, match="valid training boundary"):
-        prepare_speed_inputs(np.ones((5, 2)), train_end=0)
+        prepare_speed_inputs(np.ones((5, 2), dtype=np.float32), train_end=0)
 
     # All NaNs in train
     all_nan = np.full((5, 2), np.nan, dtype=np.float32)

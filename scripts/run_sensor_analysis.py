@@ -86,22 +86,23 @@ def analyze_sensors(
     horizons = {"5m": 1, "15m": 3, "30m": 6, "60m": 12}
 
     for sid in valid_sensors:
-        series = df[sid].dropna()
-        n_obs = len(series)
-        mean_spd = float(series.mean())
-        std_spd = float(series.std())
-        min_spd = float(series.min())
-        p05_spd = float(series.quantile(0.05))
-        p50_spd = float(series.median())
-        p95_spd = float(series.quantile(0.95))
-        max_spd = float(series.max())
-        missing_rate = float(df[sid].isna().mean() * 100.0)
+        s_vals = np.asarray(df[sid].dropna(), dtype=np.float64)
+        n_obs = len(s_vals)
+        mean_spd = float(np.mean(s_vals))
+        std_spd = float(np.std(s_vals))
+        min_spd = float(np.min(s_vals))
+        p05_spd = float(np.percentile(s_vals, 5))
+        p50_spd = float(np.median(s_vals))
+        p95_spd = float(np.percentile(s_vals, 95))
+        max_spd = float(np.max(s_vals))
+        raw_vals = np.asarray(df[sid], dtype=np.float64)
+        missing_rate = float(np.mean(np.isnan(raw_vals)) * 100.0)
 
         # Baseline persistence MAE for each horizon
         pers_maes = {}
         for h_name, h_step in horizons.items():
-            actual = series.iloc[h_step:].values
-            pred = series.iloc[:-h_step].values
+            actual = s_vals[h_step:]
+            pred = s_vals[:-h_step]
             mae = float(np.mean(np.abs(actual - pred)))
             pers_maes[f"Persistence_MAE_{h_name}"] = round(mae, 3)
 
@@ -150,10 +151,11 @@ def analyze_sensors(
 
     # Panel 2: Hourly Diurnal Profile
     ax2 = axes[0, 1]
+    assert isinstance(df.index, pd.DatetimeIndex)
     hours = df.index.hour
     for sid in valid_sensors:
-        hourly_means = df[sid].groupby(hours).mean()
-        ax2.plot(hourly_means.index, hourly_means.values, marker="o", label=f"Sensor {sid}", lw=1.8)
+        hourly_means = pd.Series(df[sid].groupby(hours).mean())
+        ax2.plot(hourly_means.index.to_numpy(), hourly_means.to_numpy(), marker="o", label=f"Sensor {sid}", lw=1.8)
     ax2.set_title(f"Diurnal 24-Hour Mean Speed ({ds_name})", fontsize=11, fontweight="bold")
     ax2.set_xlabel("Hour of Day (0 - 23)")
     ax2.set_ylabel("Mean Speed (mph)")

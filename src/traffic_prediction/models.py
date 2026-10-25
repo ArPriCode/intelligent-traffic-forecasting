@@ -10,6 +10,8 @@ from torch.nn import functional as F
 class GraphAttentionLayer(nn.Module):
     """Single spatial attention layer constrained by a fixed adjacency matrix."""
 
+    edge_bias: torch.Tensor
+
     def __init__(self, input_size: int, hidden_size: int, adjacency: torch.Tensor) -> None:
         super().__init__()
         if input_size <= 0 or hidden_size <= 0:

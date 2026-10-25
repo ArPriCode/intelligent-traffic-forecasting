@@ -63,7 +63,8 @@ def load_speed_csv(
     if expected_sensor_ids is not None and traffic.columns.tolist() != expected_sensor_ids:
         raise ValueError("Traffic sensor columns do not match the expected sensor order.")
 
-    traffic = traffic.apply(pd.to_numeric, errors="coerce").astype("float32")
+    converted = traffic.apply(pd.to_numeric, errors="coerce").astype("float32")
+    traffic = pd.DataFrame(converted)
     if not np.isfinite(traffic.to_numpy()).any():
         raise ValueError("Traffic CSV contains no finite speed readings.")
     return traffic

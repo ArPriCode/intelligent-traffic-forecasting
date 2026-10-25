@@ -19,6 +19,7 @@ try:
 
     HAS_XGBOOST = True
 except Exception:
+    XGBRegressor = None  # type: ignore
     HAS_XGBOOST = False
 
 
@@ -111,8 +112,11 @@ def tune_random_forest(
     for params in combinations:
         fold_scores = []
         for train_idx, val_idx in splits:
-            model_params = {"n_jobs": n_jobs, "random_state": random_state, **params}
-            model = RandomForestRegressor(**model_params)
+            model = RandomForestRegressor(
+                n_jobs=n_jobs,
+                random_state=random_state,
+                **params,  # type: ignore
+            )
             model.fit(X_arr[train_idx], y_arr[train_idx])
             preds = model.predict(X_arr[val_idx])
             score = evaluate_masked_mae(y_arr[val_idx], preds)
@@ -143,7 +147,7 @@ def tune_xgboost(
     random_state: int = 42,
 ) -> dict[str, Any]:
     """Perform chronological grid search for XGBoost regressor."""
-    if not HAS_XGBOOST:
+    if not HAS_XGBOOST or XGBRegressor is None:
         raise ImportError(
             "xgboost is not installed or its native C++ runtime (e.g. OpenMP/libomp) could not be loaded."
         )
@@ -184,8 +188,11 @@ def tune_xgboost(
     for params in combinations:
         fold_scores = []
         for train_idx, val_idx in splits:
-            model_params = {"n_jobs": n_jobs, "random_state": random_state, **params}
-            model = XGBRegressor(**model_params)
+            model = XGBRegressor(
+                n_jobs=n_jobs,
+                random_state=random_state,
+                **params,
+            )
             model.fit(X_arr[train_idx], y_arr[train_idx])
             preds = model.predict(X_arr[val_idx])
             score = evaluate_masked_mae(y_arr[val_idx], preds)
