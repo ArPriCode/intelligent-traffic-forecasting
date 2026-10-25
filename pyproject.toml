@@ -42,7 +42,8 @@ where = ["src"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 filterwarnings = [
-    "ignore::pandas.errors.Pandas4Warning",
+    "ignore::FutureWarning",
+    "ignore::DeprecationWarning",
 ]
 
 [tool.pyright]

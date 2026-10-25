@@ -31,7 +31,8 @@
 **Team ID**: `T020`  
 **Course**: Advanced Machine Learning (AML)  
 **Institution**: Newton School of Technology, Rishihood University  
-**Academic Report**: 📄 [View / Download Official Report (PDF)](report/Team_T020_Report.pdf)
+**Academic Report**: 📄 [View / Download Official Report (PDF)](report/Team_T020_Report.pdf)  
+**Project Presentation**: 📊 [View / Download Presentation Slides (PDF)](report/Team_T020_Presentation.pdf)
 
 | Student Name | Enrollment Number | Institutional Email |
 | :--- | :---: | :--- |
@@ -573,8 +574,9 @@ Traffic-Flow-Prediction/
 │   ├── 07_backtest.ipynb
 │   ├── 08_gat_model.ipynb
 │   └── 09_signal_simulation.ipynb
-├── report/                               # Academic report
-│   └── Team_T020_Report.pdf              # Official compiled IEEE evaluation report (PDF)
+├── report/                               # Academic report and presentation
+│   ├── Team_T020_Report.pdf              # Official compiled IEEE evaluation report (PDF)
+│   └── Team_T020_Presentation.pdf        # Official presentation slide deck (PDF)
 ├── results/                              # Generated research outputs
 │   ├── figures/                          # Publication-grade visualization figures
 │   ├── metrics/                          # Benchmark CSV tables & PyTorch weights
