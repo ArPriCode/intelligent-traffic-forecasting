@@ -142,8 +142,10 @@ def run_dashboard() -> None:
             "XGBoost": ("metr_la_xgboost_sample_sensor.csv", "predicted_speed_15min"),
             "GAT": ("metr_la_gat_sample_sensor.csv", "predicted_speed_15min"),
         }
-        prediction_tables: dict[str, pd.DataFrame] = {}
+        actual_series: pd.Series | None = None
+        model_series: dict[str, pd.Series] = {}
         missing_prediction_files: list[str] = []
+
         for model_name, (filename, prediction_column) in prediction_files.items():
             path = PREDICTIONS_PATH / filename
             if not path.is_file():
@@ -153,18 +155,31 @@ def run_dashboard() -> None:
             if not {"timestamp", "actual_speed", prediction_column}.issubset(frame.columns):
                 st.error(f"Saved forecast file `{filename}` has an unexpected column format.")
                 st.stop()
-            frame = frame[["timestamp", "actual_speed", prediction_column]].copy()
-            frame.columns = pd.Index(["timestamp", "actual_speed", model_name])
-            frame["timestamp"] = pd.to_datetime(frame["timestamp"], errors="coerce")
-            valid_mask = pd.notna(frame["timestamp"])
-            prediction_tables[model_name] = frame.loc[valid_mask].set_index("timestamp")
+            ts = pd.to_datetime(frame["timestamp"], errors="coerce")
+            valid = pd.notna(ts)
+            ts_valid = pd.DatetimeIndex(ts[valid])
+
+            if actual_series is None:
+                actual_series = pd.Series(
+                    frame.loc[valid, "actual_speed"].to_numpy(dtype=np.float32),
+                    index=ts_valid,
+                    name="actual_speed",
+                )
+            model_series[model_name] = pd.Series(
+                frame.loc[valid, prediction_column].to_numpy(dtype=np.float32),
+                index=ts_valid,
+                name=model_name,
+            )
 
         if missing_prediction_files:
             st.error(f"Missing saved forecast files: {', '.join(missing_prediction_files)}")
-        elif prediction_tables:
-            combined = pd.concat(prediction_tables.values(), axis=1, join="inner")
-            combined = combined.loc[:, ~combined.columns.duplicated()].sort_index()
-            forecast_models = list(prediction_tables)
+        elif actual_series is not None and model_series:
+            combined = (
+                pd.DataFrame({"actual_speed": actual_series, **model_series})
+                .dropna()
+                .sort_index()
+            )
+            forecast_models = list(model_series.keys())
 
             f_col1, f_col2 = st.columns([2, 1])
             with f_col1:
@@ -174,11 +189,12 @@ def run_dashboard() -> None:
                     default=forecast_models,
                 )
             with f_col2:
+                max_points = max(24, len(combined))
                 window_size = st.slider(
                     "Visible Timeline (5-min steps)",
                     min_value=24,
-                    max_value=min(288, len(combined)),
-                    value=min(144, len(combined)),
+                    max_value=min(288, max_points),
+                    value=min(144, max_points),
                     step=12,
                 )
 
