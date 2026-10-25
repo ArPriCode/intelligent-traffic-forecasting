@@ -71,3 +71,41 @@ def test_prepare_speed_inputs_causal_forward_fill():
     assert filled[1, 1] == 50.0  # forward filled from row 0
     assert filled[2, 1] == 70.0
     assert filled[3, 1] == 70.0  # forward filled from row 2
+
+
+def test_prepare_speed_inputs_invalid_inputs():
+    with pytest.raises(ValueError, match="statistic must be"):
+        prepare_speed_inputs(np.ones((5, 2), dtype=np.float32), train_end=3, statistic="mode")
+
+    with pytest.raises(ValueError, match="valid training boundary"):
+        prepare_speed_inputs(np.ones((5, 2), dtype=np.float32), train_end=0)
+
+    # All NaNs in train
+    all_nan = np.full((5, 2), np.nan, dtype=np.float32)
+    with pytest.raises(ValueError, match="Every sensor needs at least one"):
+        prepare_speed_inputs(all_nan, train_end=3)
+
+
+def test_load_speed_csv_valid_and_invalid(tmp_path):
+    from traffic_prediction.data import load_speed_csv
+
+    # 1. Valid CSV
+    dates = pd.date_range("2026-01-01 00:00", periods=5, freq="5min")
+    df = pd.DataFrame({"s1": [50.0, 52.0, 54.0, 55.0, 56.0]}, index=dates)
+    csv_path = tmp_path / "valid.csv"
+    df.to_csv(csv_path)
+
+    loaded = load_speed_csv(csv_path, expected_sensor_ids=["s1"])
+    assert loaded.shape == (5, 1)
+
+    # 2. Sensor mismatch
+    with pytest.raises(ValueError, match="expected sensor order"):
+        load_speed_csv(csv_path, expected_sensor_ids=["s2"])
+
+    # 3. Irregular intervals
+    dates_bad = pd.date_range("2026-01-01 00:00", periods=5, freq="10min")
+    df_bad = pd.DataFrame({"s1": [50.0, 52.0, 54.0, 55.0, 56.0]}, index=dates_bad)
+    bad_csv = tmp_path / "bad_interval.csv"
+    df_bad.to_csv(bad_csv)
+    with pytest.raises(ValueError, match="five-minute intervals"):
+        load_speed_csv(bad_csv)

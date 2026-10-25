@@ -89,29 +89,34 @@ Provides strictly chronological, forward-chaining cross-validation and hyperpara
 
 * `chronological_cv_splits(n_samples: int, n_splits: int = 3, min_train_fraction: float = 0.5)`:
   Yields rolling forward-chaining train/val folds ensuring no backward temporal leakage.
-* `tune_random_forest(X, y, param_grid, n_splits=3)`:
-  Performs grid search optimized for masked MAE.
+* `evaluate_masked_mae(y_true, y_pred) -> float`:
+  Computes masked mean absolute error across finite positive targets.
+* `tune_random_forest(X, y, param_grid=None, n_splits=3, min_train_fraction=0.5, n_jobs=-1, random_state=42)`:
+  Performs forward-chaining grid search for Random Forest optimized for masked MAE.
+* `tune_xgboost(X, y, param_grid=None, n_splits=3, min_train_fraction=0.5, n_jobs=1, random_state=42)`:
+  Performs forward-chaining grid search for XGBoost with safe threading and error handling.
 
 ---
 
 ### 7. `web_app.py`
-Streamlit application for interactive model evaluation and held-out trajectory visual analytics:
-* Visualizes dataset-level summary statistics and missing rate metrics.
-* Filterable model benchmark tables and dynamic bar charts by period (All, Peak, Off-Peak) and horizon (5, 15, 30, 60 min).
-* Interactive time-series forecast comparison against ground truth for sample sensors.
+Interactive Streamlit application organized into 4 analytical tabs:
+* **Tab 1: 📊 Model Comparison**: Filterable benchmark comparisons and dynamic bar charts across periods (All, Peak, Off-Peak) and horizons (5, 15, 30, 60 min).
+* **Tab 2: 📈 Forecast Trajectories**: Multi-model prediction overlays (Random Forest, XGBoost, GAT) vs. ground truth loop detector observations with adjustable time horizons.
+* **Tab 3: 🛣️ Sensor Diagnostics**: Empirical speed profiles, missingness rates, and baseline persistence degradation curves across METR-LA and PEMS-BAY sensors.
+* **Tab 4: 🚦 Adaptive Signal Simulation**: Greenshields macroscopic traffic flow demand modeling comparing Fixed-Time vs. Forecast-Aware Adaptive queue dissipation and vehicle delay reductions.
 
 ---
 
 ## Installation & Running Tests
 
-Install the package in editable mode:
+Install the package in editable mode with all dependencies:
 ```bash
-python -m pip install -e .
+python -m pip install -e ".[all]"
 ```
 
 Run the automated test suite:
 ```bash
-python -m pytest tests/
+python -m pytest -v
 ```
 
 Launch the Streamlit web dashboard:

@@ -2,6 +2,7 @@
 # Traffic Flow Prediction and Signal Control via Graph Attention Networks and Flow Models
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![CI](https://github.com/ArPriCode/intelligent-traffic-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/ArPriCode/intelligent-traffic-forecasting/actions)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.4%2B-F7931E.svg)](https://scikit-learn.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-red.svg)](https://xgboost.readthedocs.io/)
@@ -643,19 +644,21 @@ Open `http://localhost:8501` in your browser to explore metrics and forecast vis
 
 ## 14. Automated Test Suite
 
-A comprehensive test suite is implemented in [`tests/test_pipeline.py`](file:///Users/arunkumargiri/Desktop/AML/Traffic-Flow-Prediction/tests/test_pipeline.py) covering all core components:
+A modular test suite of 45 unit and regression tests is implemented across `tests/` covering all pipeline and model components:
 
-* `test_time_split`: Confirms chronological non-overlapping boundaries and fraction validation.
-* `test_observed_speeds_and_imputation`: Validates zero-to-NaN masking and causal training median filling.
-* `test_features`: Tests cyclic calendar encodings and sensor/panel feature matrices.
-* `test_graph_construction`: Validates Gaussian distance adjacency symmetry, self-loops, and thresholds.
-* `test_regression_metrics`: Tests masked MAE, RMSE, and MAPE calculations over valid non-zero targets.
-* `test_peak_mask`: Validates weekday morning and evening peak hour classifications.
-* `test_gat_model`: Tests tensor shapes and forward passes through the PyTorch Graph Attention Network.
+* [`tests/test_data.py`](tests/test_data.py): Timeline validation, 5-minute interval spacing, chronological splitting, and causal forward-fill imputation.
+* [`tests/test_features.py`](tests/test_features.py): Cyclic time encodings, autoregressive speed lags, spatial neighbor aggregations, rolling window statistics, and panel feature matrices.
+* [`tests/test_graph.py`](tests/test_graph.py): Gaussian distance adjacency construction, thresholding, strict symmetry, and self-loop guarantees.
+* [`tests/test_metrics.py`](tests/test_metrics.py): Masked MAE, RMSE, and MAPE calculations over valid non-zero targets, plus peak/off-peak masks.
+* [`tests/test_models.py`](tests/test_models.py): PyTorch `GraphAttentionLayer` and `GraphAttentionNetwork` forward shape assertions, layer normalization, and parameter validation.
+* [`tests/test_tuning.py`](tests/test_tuning.py): Leakage-free forward-chaining cross-validation splits, Random Forest, and XGBoost chronological tuning.
+* [`tests/test_scripts.py`](tests/test_scripts.py): Data verification utilities and multi-horizon sensor persistence profiling.
+* [`tests/test_pipeline.py`](tests/test_pipeline.py): End-to-end integration tests and artifact presence checks.
+* [`tests/test_init.py`](tests/test_init.py): Top-level package exports and dynamic attribute loading.
 
 Run all tests via:
 ```bash
-pytest -v tests/
+pytest -v
 ```
 
 ---

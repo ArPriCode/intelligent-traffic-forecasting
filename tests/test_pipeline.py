@@ -113,12 +113,14 @@ def test_gat_model() -> None:
 
 def test_sensor_analysis_artifacts() -> None:
     from pathlib import Path
-    metrics_path = Path("results/metrics/metr-la_sample_sensor_analysis.csv")
-    fig_path = Path("results/figures/29_metr-la_sample_sensor_analysis.png")
-    assert metrics_path.exists(), "Sensor analysis metrics CSV should exist."
-    assert fig_path.exists(), "Sensor analysis figure PNG should exist."
-    df = pd.read_csv(metrics_path)
-    assert len(df) >= 1
-    assert "mean_speed_mph" in df.columns
-    assert "Persistence_MAE_5m" in df.columns
+
+    for prefix in ["metr-la", "pems-bay"]:
+        metrics_path = Path(f"results/metrics/{prefix}_sample_sensor_analysis.csv")
+        fig_path = Path(f"results/figures/29_{prefix}_sample_sensor_analysis.png")
+        assert metrics_path.exists(), f"Sensor analysis metrics CSV for {prefix} should exist."
+        assert fig_path.exists(), f"Sensor analysis figure PNG for {prefix} should exist."
+        df = pd.read_csv(metrics_path)
+        assert len(df) >= 1
+        assert "mean_speed_mph" in df.columns
+        assert "Persistence_MAE_5m" in df.columns
 

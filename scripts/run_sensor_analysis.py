@@ -28,6 +28,8 @@ def analyze_sensors(
     sensor_ids: list[str] | None = None,
     dataset: str = "metr-la",
     plot_hours: int = 48,
+    custom_df: pd.DataFrame | None = None,
+    save_artifacts: bool = True,
 ) -> pd.DataFrame:
     """Analyze speed distributions, persistence forecasting, and temporal patterns."""
     if dataset.lower() in ("pems-bay", "bay"):
@@ -41,11 +43,16 @@ def analyze_sensors(
         default_sensors = ["773869", "767541", "767542", "717447"]
         ds_name = "METR-LA"
 
-    if not csv_file.exists():
-        raise FileNotFoundError(f"Traffic dataset not found at {csv_file}")
-
-    print(f"Loading {ds_name} dataset from {csv_file}...")
-    df = pd.read_csv(csv_file, index_col=0, parse_dates=True).astype("float32")
+    if custom_df is not None:
+        df = custom_df.copy().astype("float32")
+    else:
+        if not csv_file.exists():
+            raise FileNotFoundError(
+                f"Traffic dataset not found at {csv_file}. "
+                f"Please download or place {ds_name}.csv into data/ directory (see data/README.md)."
+            )
+        print(f"Loading {ds_name} dataset from {csv_file}...")
+        df = pd.read_csv(csv_file, index_col=0, parse_dates=True).astype("float32")
     df.columns = df.columns.astype(str)
     # Mask non-positive speeds as NaN
     df = df.where(df > 0)
@@ -79,22 +86,23 @@ def analyze_sensors(
     horizons = {"5m": 1, "15m": 3, "30m": 6, "60m": 12}
 
     for sid in valid_sensors:
-        series = df[sid].dropna()
-        n_obs = len(series)
-        mean_spd = float(series.mean())
-        std_spd = float(series.std())
-        min_spd = float(series.min())
-        p05_spd = float(series.quantile(0.05))
-        p50_spd = float(series.median())
-        p95_spd = float(series.quantile(0.95))
-        max_spd = float(series.max())
-        missing_rate = float(df[sid].isna().mean() * 100.0)
+        s_vals = np.asarray(df[sid].dropna(), dtype=np.float64)
+        n_obs = len(s_vals)
+        mean_spd = float(np.mean(s_vals))
+        std_spd = float(np.std(s_vals))
+        min_spd = float(np.min(s_vals))
+        p05_spd = float(np.percentile(s_vals, 5))
+        p50_spd = float(np.median(s_vals))
+        p95_spd = float(np.percentile(s_vals, 95))
+        max_spd = float(np.max(s_vals))
+        raw_vals = np.asarray(df[sid], dtype=np.float64)
+        missing_rate = float(np.mean(np.isnan(raw_vals)) * 100.0)
 
         # Baseline persistence MAE for each horizon
         pers_maes = {}
         for h_name, h_step in horizons.items():
-            actual = series.iloc[h_step:].values
-            pred = series.iloc[:-h_step].values
+            actual = s_vals[h_step:]
+            pred = s_vals[:-h_step]
             mae = float(np.mean(np.abs(actual - pred)))
             pers_maes[f"Persistence_MAE_{h_name}"] = round(mae, 3)
 
@@ -122,9 +130,10 @@ def analyze_sensors(
         records.append(rec)
 
     metrics_df = pd.DataFrame(records)
-    metrics_path = RESULTS_METRICS / f"{dataset.lower()}_sample_sensor_analysis.csv"
-    metrics_df.to_csv(metrics_path, index=False)
-    print(f"Saved sensor metrics table to {metrics_path}")
+    if save_artifacts:
+        metrics_path = RESULTS_METRICS / f"{dataset.lower()}_sample_sensor_analysis.csv"
+        metrics_df.to_csv(metrics_path, index=False)
+        print(f"Saved sensor metrics table to {metrics_path}")
 
     # Plot 4-panel analysis figure
     fig, axes = plt.subplots(2, 2, figsize=(14, 9), dpi=200)
@@ -142,10 +151,11 @@ def analyze_sensors(
 
     # Panel 2: Hourly Diurnal Profile
     ax2 = axes[0, 1]
+    assert isinstance(df.index, pd.DatetimeIndex)
     hours = df.index.hour
     for sid in valid_sensors:
-        hourly_means = df[sid].groupby(hours).mean()
-        ax2.plot(hourly_means.index, hourly_means.values, marker="o", label=f"Sensor {sid}", lw=1.8)
+        hourly_means = pd.Series(df[sid].groupby(hours).mean())
+        ax2.plot(hourly_means.index.to_numpy(), hourly_means.to_numpy(), marker="o", label=f"Sensor {sid}", lw=1.8)
     ax2.set_title(f"Diurnal 24-Hour Mean Speed ({ds_name})", fontsize=11, fontweight="bold")
     ax2.set_xlabel("Hour of Day (0 - 23)")
     ax2.set_ylabel("Mean Speed (mph)")
@@ -178,11 +188,12 @@ def analyze_sensors(
     ax4.legend(loc="upper left", fontsize=8)
 
     plt.tight_layout()
-    fig_name = f"29_{dataset.lower()}_sample_sensor_analysis.png"
-    fig_path = RESULTS_FIG / fig_name
-    plt.savefig(fig_path, bbox_inches="tight")
+    if save_artifacts:
+        fig_name = f"29_{dataset.lower()}_sample_sensor_analysis.png"
+        fig_path = RESULTS_FIG / fig_name
+        plt.savefig(fig_path, bbox_inches="tight")
+        print(f"Saved sensor analysis plot to {fig_path}")
     plt.close()
-    print(f"Saved sensor analysis plot to {fig_path}")
 
     return metrics_df
 

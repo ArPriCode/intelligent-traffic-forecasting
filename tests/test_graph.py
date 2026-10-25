@@ -38,3 +38,25 @@ def test_build_distance_adjacency_missing_columns():
     )
     with pytest.raises(ValueError, match="Distance table must include"):
         build_distance_adjacency(distances, sensor_ids)
+
+
+def test_build_distance_adjacency_invalid_inputs():
+    distances = pd.DataFrame(
+        {"from": ["s1"], "to": ["s2"], "cost": [10.0]}
+    )
+    # Empty sensor_ids
+    with pytest.raises(ValueError, match="non-empty and unique"):
+        build_distance_adjacency(distances, [])
+
+    # Duplicate sensor_ids
+    with pytest.raises(ValueError, match="non-empty and unique"):
+        build_distance_adjacency(distances, ["s1", "s1"])
+
+    # Invalid threshold
+    with pytest.raises(ValueError, match="threshold must be between zero and one"):
+        build_distance_adjacency(distances, ["s1", "s2"], threshold=0.0)
+
+    # Negative distance
+    neg_dist = pd.DataFrame({"from": ["s1"], "to": ["s2"], "cost": [-5.0]})
+    with pytest.raises(ValueError, match="finite non-negative"):
+        build_distance_adjacency(neg_dist, ["s1", "s2"])

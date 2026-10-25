@@ -107,5 +107,42 @@ def test_make_panel_features(sample_traffic_series):
     assert isinstance(panel, pd.DataFrame)
     assert len(panel) == 4
     assert "speed_now" in panel.columns
-    assert "sensor_id" in panel.columns
     assert list(panel["sensor_id"]) == ["s0", "s1", "s0", "s1"]
+
+
+def test_features_invalid_sensor_index(sample_traffic_series):
+    _, speed, clock = sample_traffic_series
+    time_rows = np.array([5, 6], dtype=np.int64)
+    with pytest.raises(IndexError, match="sensor_index falls outside"):
+        make_sensor_features(speed, clock, time_rows, sensor_index=99)
+    with pytest.raises(IndexError, match="sensor_index falls outside"):
+        make_sensor_features(speed, clock, time_rows, sensor_index=-1)
+
+
+def test_make_rolling_features_invalid_windows(sample_traffic_series):
+    _, speed, _ = sample_traffic_series
+    time_rows = np.array([6], dtype=np.int64)
+    with pytest.raises(ValueError, match="window_sizes must be non-empty"):
+        make_rolling_features(speed, time_rows, sensor_index=0, window_sizes=())
+    with pytest.raises(ValueError, match="window_sizes must be non-empty"):
+        make_rolling_features(speed, time_rows, sensor_index=0, window_sizes=(0, 3))
+
+
+def test_make_panel_features_validation_errors(sample_traffic_series):
+    _, speed, clock = sample_traffic_series
+    with pytest.raises(ValueError, match="At least one row is required"):
+        make_panel_features(
+            speed,
+            clock,
+            ["s0", "s1", "s2"],
+            np.array([], dtype=np.int64),
+            np.array([], dtype=np.int64),
+        )
+    with pytest.raises(ValueError, match="sensor_ids must match"):
+        make_panel_features(
+            speed,
+            clock,
+            ["only_one"],
+            np.array([5], dtype=np.int64),
+            np.array([0], dtype=np.int64),
+        )
