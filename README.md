@@ -31,8 +31,8 @@
 **Team ID**: `T020`  
 **Course**: Advanced Machine Learning (AML)  
 **Institution**: Newton School of Technology, Rishihood University  
-**Academic Report**: 📄 [View / Download Official Report (PDF)](report/Team_T020_Report.pdf)  
-**Project Presentation**: 📊 [View / Download Presentation Slides (PDF)](report/Team_T020_Presentation.pdf)
+**Academic Report**: [View / Download Official Report (PDF)](report/Team_T020_Report.pdf)  
+**Project Presentation**: [View / Download Presentation Slides (PDF)](report/Team_T020_Presentation.pdf)
 
 | Student Name | Enrollment Number | Institutional Email |
 | :--- | :---: | :--- |
