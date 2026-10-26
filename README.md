@@ -28,7 +28,7 @@
 
 ### 👥 Team Quanta (Team ID: T020)
 
-**Team ID**: `T020`  
+**Team ID**:`T020`  
 **Course**: Advanced Machine Learning (AML)  
 **Institution**: Newton School of Technology, Rishihood University  
 **Academic Report**: [View / Download Official Report (PDF)](report/Team_T020_Report.pdf)  
