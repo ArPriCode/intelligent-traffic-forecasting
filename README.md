@@ -2,7 +2,6 @@
 # Traffic Flow Prediction and Signal Control via Graph Attention Networks and Flow Models
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![CI](https://github.com/ArPriCode/intelligent-traffic-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/ArPriCode/intelligent-traffic-forecasting/actions)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.4%2B-F7931E.svg)](https://scikit-learn.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-red.svg)](https://xgboost.readthedocs.io/)
