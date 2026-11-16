@@ -60,3 +60,14 @@ def test_web_app_interactions() -> None:
         app.slider[1].set_value(48).run()
         assert not app.exception
         assert not app.error
+
+
+def test_streamlit_app_root_entrypoint() -> None:
+    """Verify that root streamlit_app.py entrypoint renders without error."""
+    root_app_path = str(Path(__file__).resolve().parents[1] / "streamlit_app.py")
+    app = AppTest.from_file(root_app_path, default_timeout=30)
+    app.run()
+    assert not app.exception, f"streamlit_app.py crashed: {app.exception}"
+    assert not app.error, f"streamlit_app.py rendered errors: {app.error}"
+    assert len(app.tabs) == 5
+

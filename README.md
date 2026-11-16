@@ -508,10 +508,10 @@ By extending green times on Phase 1 prior to severe shockwave arrival, the adapt
 
 ## 10. Interactive Streamlit Web Dashboard
 
-An interactive visual analytics application is provided in `src/traffic_prediction/web_app.py`.
+An interactive visual analytics application is provided via `streamlit_app.py` (and `src/traffic_prediction/web_app.py`).
 
 ```bash
-streamlit run src/traffic_prediction/web_app.py
+streamlit run streamlit_app.py
 ```
 
 ### Dashboard Capabilities
@@ -667,7 +667,7 @@ Traffic-Flow-Prediction/
 │       ├── models.py                     # PyTorch Graph Attention Network
 │       ├── tuning.py                     # Chronological CV & hyperparameter search
 │       └── web_app.py                    # Streamlit visual analytics app
-├── tests/                                # Automated unit & regression test suite (62 tests)
+├── tests/                                # Automated unit & regression test suite (63 tests)
 │   ├── test_data.py                      # Split boundaries & masking tests
 │   ├── test_export.py                    # Model serialization and artifact loader tests
 │   ├── test_features.py                  # Temporal & spatial lag features, Greenshields tests
@@ -679,7 +679,7 @@ Traffic-Flow-Prediction/
 │   ├── test_pipeline.py                  # End-to-end component tests
 │   ├── test_scripts.py                   # CLI verification, persistence, congestion map tests
 │   ├── test_tuning.py                    # Forward-chaining CV & tuning tests
-│   └── test_web_app.py                   # Streamlit AppTest integration tests
+│   └── test_web_app.py                   # Streamlit AppTest integration tests (including root app)
 ├── LICENSE                               # MIT Open-Source License
 ├── pyproject.toml                        # Build configuration & packaging specs
 ├── requirements.txt                      # Pinned Python package dependencies
@@ -718,9 +718,9 @@ jupyter lab notebooks/
 
 ### Step 5: Launch the Interactive Web Dashboard
 ```bash
-streamlit run src/traffic_prediction/web_app.py
+streamlit run streamlit_app.py
 ```
-Open `http://localhost:8501` in your browser to explore metrics and forecast visualizations.
+Open `http://localhost:8501` in your browser to explore metrics and forecast visualizations. (For Streamlit Community Cloud deployment, point the main file path to `streamlit_app.py`).
 
 ### Step 6: CLI Prediction Evaluation & Congestion Map Generation
 Evaluate exported predictions with tail percentile error profiling, generate spatial congestion maps, and compile the executive benchmark summary:
@@ -739,7 +739,7 @@ python scripts/generate_benchmark_summary.py
 
 ## 15. Automated Test Suite
 
-A modular test suite of 62 unit and regression tests is implemented across `tests/` covering all pipeline, model, and CLI components:
+A modular test suite of 63 unit and regression tests is implemented across `tests/` covering all pipeline, model, and CLI components:
 
 * [`tests/test_data.py`](tests/test_data.py): Timeline validation, 5-minute interval spacing, chronological splitting, and causal forward-fill imputation.
 * [`tests/test_features.py`](tests/test_features.py): Cyclic time encodings, autoregressive speed lags, spatial neighbor aggregations, rolling window statistics, and panel feature matrices.
