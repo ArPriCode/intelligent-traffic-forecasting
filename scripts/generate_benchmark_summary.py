@@ -49,6 +49,7 @@ def generate_benchmark_summary(
             rmse = row["RMSE"]
             mape = row["MAPE_percent"]
 
+            # Compute percentage improvement or degradation relative to the naive persistence baseline
             if persist_mae is not None and model.lower() != "persistence":
                 delta = ((persist_mae - mae) / persist_mae) * 100
                 delta_str = f"**-{delta:.1f}%**" if delta > 0 else f"+{abs(delta):.1f}%"
@@ -70,6 +71,7 @@ def generate_benchmark_summary(
     df_peak = df[df["period"].str.lower() == "peak"]
     df_offpeak = df[df["period"].str.lower() == "off-peak"]
 
+    # Compute peak degradation ratio: Peak MAE / Off-Peak MAE measuring sensitivity to rush hour jams
     if not df_peak.empty and not df_offpeak.empty:
         for h in horizons:
             p_h = df_peak[df_peak["horizon_minutes"] == h]

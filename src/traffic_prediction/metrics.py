@@ -38,10 +38,12 @@ def error_distribution(
     y_pred = np.asarray(predicted, dtype=np.float64)
     if y_true.shape != y_pred.shape:
         raise ValueError("Actual and predicted arrays must have the same shape.")
+    # Exclude dropouts (0.0 readings and NaNs) from ground truth
     valid = np.isfinite(y_true) & (y_true > 0) & np.isfinite(y_pred)
     if not valid.any():
         raise ValueError("No finite positive targets are available for scoring.")
 
+    # Calculate signed errors (y_true - y_pred) for bias diagnostics
     signed_errors = y_true[valid] - y_pred[valid]
     abs_errors = np.abs(signed_errors)
 
@@ -50,6 +52,7 @@ def error_distribution(
         "mean_bias": float(np.mean(signed_errors)),
         "max_error": float(np.max(abs_errors)),
     }
+    # Compute error percentiles (e.g. median p50, 90th percentile p90, 95th percentile p95)
     for p in percentiles:
         p_val = float(np.percentile(abs_errors, p))
         stats[f"p{int(p)}_MAE" if p.is_integer() else f"p{p}_MAE"] = p_val

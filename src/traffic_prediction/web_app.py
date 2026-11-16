@@ -301,6 +301,7 @@ def run_dashboard() -> None:
             st.info(f"Signal policy figure not found: {sim_fig.name}")
 
     with tab5:
+        # Tab 5: Deep-dive visualizer for the Phase 2 Residual Spatial Hybrid model
         st.subheader("Residual Spatial Hybrid Architecture (Random Forest + GAT Fusion)")
         st.markdown(
             "Two-stage spatio-temporal learning: A localized **Random Forest** predicts base speeds, "
@@ -311,6 +312,7 @@ def run_dashboard() -> None:
         hybrid_pred_path = PREDICTIONS_PATH / "metr_la_hybrid_sample_sensor.csv"
         hybrid_fig_path = FIGURES_PATH / "30_residual_hybrid_model_comparison.png"
 
+        # Step 1: Summary KPI metrics highlighting accuracy improvements over standalone Random Forest
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("5m Test MAE", "2.482 mph", "-0.037 vs RF (2.519)")
         c2.metric("15m Test MAE", "3.097 mph", "-0.022 vs RF (3.119)")
@@ -327,11 +329,13 @@ def run_dashboard() -> None:
             "forecast toward the ground truth."
         )
 
+        # Step 2: Load and plot held-out forecast trajectory with isolated residual corrections
         if hybrid_pred_path.is_file():
             h_df = read_csv(str(hybrid_pred_path)).copy()
             h_df["timestamp"] = pd.to_datetime(h_df["timestamp"], errors="coerce")
             h_df = h_df.dropna(subset=["timestamp"]).set_index("timestamp")
 
+            # Step 3: Interactive window slider (up to 288 steps / 24 hours of 5-min intervals)
             w_col1, w_col2 = st.columns([2, 1])
             with w_col2:
                 h_total = len(h_df)
@@ -345,6 +349,8 @@ def run_dashboard() -> None:
                 )
 
             sub_h = h_df.tail(h_window)
+
+            # Step 4: Speed trajectory comparison (Ground Truth vs Base vs Composite)
             st.markdown("**1. Speed Trajectory: Ground Truth vs. Base RF vs. Residual Hybrid**")
             st.line_chart(
                 sub_h[["actual_speed", "base_rf_speed_15min", "predicted_speed_15min"]].rename(
@@ -357,6 +363,7 @@ def run_dashboard() -> None:
                 height=340,
             )
 
+            # Step 5: Spatial GAT error compensator signal over time
             st.markdown(r"**2. Spatial GAT Residual Correction Signal ($\hat{e}_{s,t}^{\text{GAT}}$)**")
             st.caption(
                 "Positive values boost speed under-predictions; negative values pull down over-predictions during shockwave build-up."
@@ -368,6 +375,7 @@ def run_dashboard() -> None:
                 height=220,
             )
 
+        # Step 6: Multi-horizon comparative benchmark chart across all 5 paradigms
         if hybrid_fig_path.is_file():
             st.markdown("---")
             st.markdown("#### 📊 Multi-Horizon Benchmark Comparison (All Evaluated Models)")

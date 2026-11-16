@@ -46,9 +46,9 @@ def test_analyze_sensors_with_custom_dataframe():
 
 
 def test_evaluate_prediction_file(tmp_path):
-    dates = pd.date_range("2026-01-05 08:00", periods=20, freq="5min")
-    actual = np.full(20, 60.0)
-    pred = np.full(20, 58.0)
+    dates = pd.date_range("2026-01-05 08:00", periods=40, freq="15min")
+    actual = np.full(40, 60.0)
+    pred = np.full(40, 58.0)
     pred[0] = 50.0  # single larger error
 
     df = pd.DataFrame(
@@ -63,13 +63,15 @@ def test_evaluate_prediction_file(tmp_path):
 
     summary = evaluate_prediction_file(csv_file)
     assert summary["file"] == "test_preds.csv"
-    assert summary["valid_samples"] == 20
+    assert summary["valid_samples"] == 40
     assert summary["MAE"] > 0
     assert summary["RMSE"] > 0
     assert "p50_MAE" in summary
     assert "p90_MAE" in summary
     assert "peak_MAE" in summary
     assert "offpeak_MAE" in summary
+    assert summary["peak_samples"] > 0
+    assert summary["offpeak_samples"] > 0
 
 
 def test_generate_benchmark_summary(tmp_path):

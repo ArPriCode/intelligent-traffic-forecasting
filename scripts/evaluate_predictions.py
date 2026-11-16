@@ -25,6 +25,7 @@ def find_columns(df: pd.DataFrame) -> tuple[str, str, str | None]:
     pred_col = None
     time_col = None
 
+    # Flexible column detection supporting common research naming conventions
     for col in df.columns:
         c_lower = str(col).lower()
         if "time" in c_lower or "date" in c_lower:
@@ -53,9 +54,12 @@ def evaluate_prediction_file(
     actual = df[actual_col].to_numpy(dtype=np.float64)
     predicted = df[pred_col].to_numpy(dtype=np.float64)
 
+    # Compute standard masked error metrics (MAE, RMSE, MAPE)
     reg_metrics = regression_metrics(actual, predicted)
+    # Compute tail percentile statistics and mean signed bias
     dist_metrics = error_distribution(actual, predicted, percentiles=percentiles)
 
+    # Initialize summary dictionary with complete schema defaults
     summary: dict[str, Any] = {
         "file": filepath.name,
         "total_rows": len(df),
@@ -69,9 +73,17 @@ def evaluate_prediction_file(
         "p90_MAE": dist_metrics.get("p90_MAE", np.nan),
         "p95_MAE": dist_metrics.get("p95_MAE", np.nan),
         "p99_MAE": dist_metrics.get("p99_MAE", np.nan),
+        "peak_MAE": np.nan,
+        "peak_RMSE": np.nan,
+        "peak_MAPE_percent": np.nan,
+        "peak_samples": 0,
+        "offpeak_MAE": np.nan,
+        "offpeak_RMSE": np.nan,
+        "offpeak_MAPE_percent": np.nan,
+        "offpeak_samples": 0,
     }
 
-    # Stratified peak vs off-peak evaluation
+    # Stratified peak (07:00-09:59 & 16:00-18:59 PST) vs off-peak evaluation
     if time_col is not None:
         try:
             ts_series = pd.to_datetime(df[time_col])
