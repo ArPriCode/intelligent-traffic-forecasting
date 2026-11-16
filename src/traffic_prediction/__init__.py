@@ -10,6 +10,7 @@ from traffic_prediction.data import (
     prepare_speed_inputs,
     time_split,
 )
+from traffic_prediction.export import load_model_artifact, save_model_artifact
 from traffic_prediction.features import (
     make_enhanced_sensor_features,
     make_panel_features,
@@ -23,7 +24,6 @@ from traffic_prediction.graph import (
     build_distance_adjacency,
     compute_dual_diffusion_matrices,
 )
-from traffic_prediction.hybrid import ResidualSpatialGAT, ResidualSpatialHybrid
 from traffic_prediction.metrics import peak_mask, regression_metrics
 from traffic_prediction.tuning import (
     chronological_cv_splits,
@@ -34,6 +34,10 @@ from traffic_prediction.tuning import (
 )
 
 if TYPE_CHECKING:
+    from traffic_prediction.hybrid import (
+        ResidualSpatialGAT,
+        ResidualSpatialHybrid,
+    )
     from traffic_prediction.models import (
         GraphAttentionLayer,
         GraphAttentionNetwork,
@@ -51,6 +55,7 @@ __all__ = [
     "chronological_cv_splits",
     "compute_dual_diffusion_matrices",
     "evaluate_masked_mae",
+    "load_model_artifact",
     "load_speed_csv",
     "make_enhanced_sensor_features",
     "make_panel_features",
@@ -61,6 +66,7 @@ __all__ = [
     "peak_mask",
     "prepare_speed_inputs",
     "regression_metrics",
+    "save_model_artifact",
     "time_features",
     "time_split",
     "tune_random_forest",
@@ -71,7 +77,23 @@ __all__ = [
 
 def __getattr__(name: str) -> object:
     if name in ("GraphAttentionNetwork", "GraphAttentionLayer"):
-        import traffic_prediction.models as models
+        try:
+            import traffic_prediction.models as models
+        except ModuleNotFoundError as err:
+            raise ImportError(
+                f"'{name}' requires PyTorch. Install with: pip install 'traffic-prediction[gat]' or 'traffic-prediction[all]'"
+            ) from err
 
         return getattr(models, name)
+
+    if name in ("ResidualSpatialGAT", "ResidualSpatialHybrid"):
+        try:
+            import traffic_prediction.hybrid as hybrid
+        except ModuleNotFoundError as err:
+            raise ImportError(
+                f"'{name}' requires PyTorch. Install with: pip install 'traffic-prediction[gat]' or 'traffic-prediction[all]'"
+            ) from err
+
+        return getattr(hybrid, name)
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
