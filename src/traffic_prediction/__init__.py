@@ -24,7 +24,11 @@ from traffic_prediction.graph import (
     build_distance_adjacency,
     compute_dual_diffusion_matrices,
 )
-from traffic_prediction.metrics import peak_mask, regression_metrics
+from traffic_prediction.metrics import (
+    error_distribution,
+    peak_mask,
+    regression_metrics,
+)
 from traffic_prediction.tuning import (
     chronological_cv_splits,
     evaluate_masked_mae,
@@ -54,6 +58,7 @@ __all__ = [
     "build_distance_adjacency",
     "chronological_cv_splits",
     "compute_dual_diffusion_matrices",
+    "error_distribution",
     "evaluate_masked_mae",
     "load_model_artifact",
     "load_speed_csv",

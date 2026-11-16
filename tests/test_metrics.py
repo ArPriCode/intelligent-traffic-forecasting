@@ -4,7 +4,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from traffic_prediction.metrics import peak_mask, regression_metrics
+from traffic_prediction.metrics import (
+    error_distribution,
+    peak_mask,
+    regression_metrics,
+)
 
 
 def test_regression_metrics_masked_calculation():
@@ -41,3 +45,26 @@ def test_peak_mask_weekdays():
     )
     mask = peak_mask(timestamps)
     assert list(mask) == [True, False, True, False, False]
+
+
+def test_error_distribution_calculation():
+    # Valid targets: index 0 (60 vs 55, diff=+5, abs=5), index 3 (70 vs 80, diff=-10, abs=10)
+    y_true = np.array([60.0, np.nan, 0.0, 70.0])
+    y_pred = np.array([55.0, 50.0, 40.0, 80.0])
+
+    stats = error_distribution(y_true, y_pred)
+    assert stats["valid_test_values"] == 2
+    assert pytest.approx(stats["mean_bias"], 0.001) == -2.5
+    assert pytest.approx(stats["max_error"], 0.001) == 10.0
+    assert pytest.approx(stats["p50_MAE"], 0.001) == 7.5
+    assert pytest.approx(stats["p90_MAE"], 0.001) == 9.5
+
+
+def test_error_distribution_invalid():
+    # Mismatched shapes
+    with pytest.raises(ValueError, match="same shape"):
+        error_distribution(np.array([10.0, 20.0]), np.array([10.0]))
+
+    # No valid targets
+    with pytest.raises(ValueError, match="No finite positive targets"):
+        error_distribution(np.array([np.nan, 0.0]), np.array([10.0, 20.0]))

@@ -28,6 +28,35 @@ def regression_metrics(
     }
 
 
+def error_distribution(
+    actual: np.ndarray,
+    predicted: np.ndarray,
+    percentiles: tuple[float, ...] = (50.0, 90.0, 95.0, 99.0),
+) -> dict[str, float | int]:
+    """Compute tail absolute error percentiles, max error, and bias over valid targets."""
+    y_true = np.asarray(actual, dtype=np.float64)
+    y_pred = np.asarray(predicted, dtype=np.float64)
+    if y_true.shape != y_pred.shape:
+        raise ValueError("Actual and predicted arrays must have the same shape.")
+    valid = np.isfinite(y_true) & (y_true > 0) & np.isfinite(y_pred)
+    if not valid.any():
+        raise ValueError("No finite positive targets are available for scoring.")
+
+    signed_errors = y_true[valid] - y_pred[valid]
+    abs_errors = np.abs(signed_errors)
+
+    stats: dict[str, float | int] = {
+        "valid_test_values": int(valid.sum()),
+        "mean_bias": float(np.mean(signed_errors)),
+        "max_error": float(np.max(abs_errors)),
+    }
+    for p in percentiles:
+        p_val = float(np.percentile(abs_errors, p))
+        stats[f"p{int(p)}_MAE" if p.is_integer() else f"p{p}_MAE"] = p_val
+
+    return stats
+
+
 def peak_mask(
     timestamps: pd.DatetimeIndex,
     target_rows: np.ndarray | None = None,
