@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from scripts.evaluate_predictions import evaluate_prediction_file
 from scripts.run_sensor_analysis import analyze_sensors
 from scripts.verify_data import check_graph_files, check_traffic_csv
 
@@ -41,3 +42,30 @@ def test_analyze_sensors_with_custom_dataframe():
     assert "mean_speed_mph" in res.columns
     assert "Persistence_MAE_5m" in res.columns
     assert "Persistence_MAE_60m" in res.columns
+
+
+def test_evaluate_prediction_file(tmp_path):
+    dates = pd.date_range("2026-01-05 08:00", periods=20, freq="5min")
+    actual = np.full(20, 60.0)
+    pred = np.full(20, 58.0)
+    pred[0] = 50.0  # single larger error
+
+    df = pd.DataFrame(
+        {
+            "timestamp": dates,
+            "actual_speed": actual,
+            "predicted_speed": pred,
+        }
+    )
+    csv_file = tmp_path / "test_preds.csv"
+    df.to_csv(csv_file, index=False)
+
+    summary = evaluate_prediction_file(csv_file)
+    assert summary["file"] == "test_preds.csv"
+    assert summary["valid_samples"] == 20
+    assert summary["MAE"] > 0
+    assert summary["RMSE"] > 0
+    assert "p50_MAE" in summary
+    assert "p90_MAE" in summary
+    assert "peak_MAE" in summary
+    assert "offpeak_MAE" in summary
