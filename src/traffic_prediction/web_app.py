@@ -98,7 +98,7 @@ def run_dashboard() -> None:
         [
             "📊 Model Comparison",
             "📈 Forecast Trajectories",
-            "🛣️ Sensor Diagnostics",
+            "🛣️ Sensor Diagnostics & Congestion Maps",
             "🚦 Adaptive Signal Simulation",
             "🧠 Residual Hybrid (AML + DL)",
         ]
@@ -234,16 +234,67 @@ def run_dashboard() -> None:
                 st.line_chart(combined[columns_to_plot].tail(window_size), height=420)
 
     with tab3:
-        st.subheader("Sensor Profiling & Baseline Error Growth")
+        st.subheader("Spatial Congestion Maps & Sensor Diagnostics")
         st.markdown(
-            "Empirical speed distributions and persistence error degradation across forecast horizons."
+            "Spatial network congestion maps across Los Angeles County highways, "
+            "empirical speed distributions, and persistence error degradation."
         )
 
         sensor_ds = st.radio("Select Network", ["METR-LA", "PEMS-BAY"], horizontal=True)
+
+        if sensor_ds == "METR-LA":
+            congestion_fig = FIGURES_PATH / "31_metr_la_network_congestion_maps.png"
+            congestion_csv = METRICS_PATH / "metr_la_spatial_congestion_snapshot.csv"
+
+            if congestion_fig.is_file():
+                st.markdown("#### 🗺️ Network Spatial Congestion Maps (15m Forecast vs Ground Truth)")
+                st.markdown(
+                    "High-resolution spatio-temporal comparison during peak evening rush hour across "
+                    "207 loop detector stations on the Los Angeles County highway network."
+                )
+                render_image(
+                    str(congestion_fig),
+                    caption="METR-LA Spatial Congestion Mapping: (A) Ground Truth, (B) GAT 15m Forecast, (C) Spatial Error, (D) Calibration",
+                )
+
+            if congestion_csv.is_file():
+                c_df = read_csv(str(congestion_csv))
+                valid_mask = c_df["ground_truth_speed_mph"].notna()
+                valid_count = int(valid_mask.sum())
+                mean_spd = float(c_df.loc[valid_mask, "ground_truth_speed_mph"].mean())
+                mean_ae = float(c_df.loc[valid_mask, "gat_abs_error_mph"].mean())
+                bottlenecks = int((c_df.loc[valid_mask, "ground_truth_speed_mph"] < 35.0).sum())
+
+                cm1, cm2, cm3, cm4 = st.columns(4)
+                cm1.metric("Active Highway Sensors", f"{valid_count} / {len(c_df)}")
+                cm2.metric("Network Rush Hour Speed", f"{mean_spd:.1f} mph", "Severe Congestion (<40 mph)")
+                cm3.metric("GAT 15m Spatial MAE", f"{mean_ae:.2f} mph")
+                cm4.metric("Severe Bottlenecks (<35 mph)", f"{bottlenecks} sensors")
+
+                st.markdown("##### Highway Sensor Snapshot Table")
+                filter_choice = st.selectbox(
+                    "Filter by Congestion State",
+                    [
+                        "All Sensors",
+                        "Severe Congestion (<35 mph)",
+                        "Moderate (35-55 mph)",
+                        "Free Flow (>55 mph)",
+                    ],
+                    key="congestion_filter",
+                )
+                disp_df = c_df.copy()
+                if filter_choice != "All Sensors":
+                    disp_df = disp_df[disp_df["congestion_state"] == filter_choice]
+
+                render_dataframe(disp_df.round(2), hide_index=True)
+
+            st.divider()
+
         fname_prefix = "metr-la" if sensor_ds == "METR-LA" else "pems-bay"
         analysis_csv = METRICS_PATH / f"{fname_prefix}_sample_sensor_analysis.csv"
         analysis_fig = FIGURES_PATH / f"29_{fname_prefix}_sample_sensor_analysis.png"
 
+        st.markdown(f"#### 📊 {sensor_ds} Sensor Profiling & Persistence Degradation")
         if analysis_csv.is_file():
             sensor_df = read_csv(str(analysis_csv))
             render_dataframe(sensor_df.round(2), hide_index=True)

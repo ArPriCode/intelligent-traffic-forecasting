@@ -27,12 +27,15 @@ def test_web_app_full_render() -> None:
     assert "Fixed Total Delay" in metric_labels
     assert "Adaptive Total Delay" in metric_labels
     assert "Delay Reduction" in metric_labels
+    assert "Active Highway Sensors" in metric_labels
+    assert "Network Rush Hour Speed" in metric_labels
 
     # Verify interactive components
     assert len(app.tabs) == 5
     assert len(app.radio) >= 1
     assert len(app.slider) >= 2
     assert len(app.multiselect) >= 1
+    assert len(app.selectbox) >= 1
 
 
 def test_web_app_interactions() -> None:
