@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from scripts.evaluate_predictions import evaluate_prediction_file
+from scripts.generate_benchmark_summary import generate_benchmark_summary
 from scripts.run_sensor_analysis import analyze_sensors
 from scripts.verify_data import check_graph_files, check_traffic_csv
 
@@ -69,3 +70,26 @@ def test_evaluate_prediction_file(tmp_path):
     assert "p90_MAE" in summary
     assert "peak_MAE" in summary
     assert "offpeak_MAE" in summary
+
+
+def test_generate_benchmark_summary(tmp_path):
+    df = pd.DataFrame(
+        {
+            "dataset": ["METR-LA"] * 4,
+            "model": ["Persistence", "Random Forest", "Persistence", "Random Forest"],
+            "horizon_minutes": [15, 15, 15, 15],
+            "MAE": [3.5, 3.1, 4.5, 4.3],
+            "RMSE": [6.4, 5.7, 8.2, 7.5],
+            "MAPE_percent": [8.6, 8.4, 14.3, 15.1],
+            "period": ["All", "All", "Peak", "Peak"],
+        }
+    )
+    csv_file = tmp_path / "model_comp.csv"
+    df.to_csv(csv_file, index=False)
+    out_md = tmp_path / "summary.md"
+
+    text = generate_benchmark_summary(csv_file, output_md=out_md)
+    assert "Benchmark Executive Summary" in text
+    assert "Persistence" in text
+    assert "Random Forest" in text
+    assert out_md.is_file()
