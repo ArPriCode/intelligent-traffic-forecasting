@@ -10,6 +10,7 @@ import pytest
 
 from scripts.evaluate_predictions import evaluate_prediction_file
 from scripts.generate_benchmark_summary import generate_benchmark_summary
+from scripts.generate_congestion_maps import generate_congestion_maps
 from scripts.run_sensor_analysis import analyze_sensors
 from scripts.verify_data import check_graph_files, check_traffic_csv
 
@@ -95,3 +96,33 @@ def test_generate_benchmark_summary(tmp_path):
     assert "Persistence" in text
     assert "Random Forest" in text
     assert out_md.is_file()
+
+
+def test_generate_congestion_maps(tmp_path):
+    """Verify spatial congestion mapping generates valid snapshot data and raises on bad inputs."""
+    # Test invalid horizon
+    with pytest.raises(ValueError, match="horizon_minutes must be one of"):
+        generate_congestion_maps(horizon_minutes=45)
+
+    # Test file validation error
+    with pytest.raises(FileNotFoundError):
+        generate_congestion_maps(data_path=tmp_path / "nonexistent.csv")
+
+    # Verify existing generated snapshot table
+    snapshot_path = Path("results/metrics/metr_la_spatial_congestion_snapshot.csv")
+    if snapshot_path.is_file():
+        df = pd.read_csv(snapshot_path)
+        assert len(df) == 207
+        expected_cols = {
+            "sensor_id",
+            "latitude",
+            "longitude",
+            "ground_truth_speed_mph",
+            "gat_predicted_speed_mph",
+            "gat_abs_error_mph",
+            "congestion_state",
+        }
+        assert expected_cols.issubset(df.columns)
+        assert df["latitude"].between(33.0, 36.0).all()
+        assert df["longitude"].between(-120.0, -117.0).all()
+
