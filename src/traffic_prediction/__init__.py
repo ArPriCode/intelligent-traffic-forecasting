@@ -12,6 +12,7 @@ from traffic_prediction.data import (
 )
 from traffic_prediction.export import load_model_artifact, save_model_artifact
 from traffic_prediction.features import (
+    greenshields_flow_occupancy,
     make_enhanced_sensor_features,
     make_panel_features,
     make_rolling_features,
@@ -23,6 +24,7 @@ from traffic_prediction.graph import (
     build_directed_distance_adjacency,
     build_distance_adjacency,
     compute_dual_diffusion_matrices,
+    to_networkx_graph,
 )
 from traffic_prediction.metrics import (
     error_distribution,
@@ -60,6 +62,7 @@ __all__ = [
     "compute_dual_diffusion_matrices",
     "error_distribution",
     "evaluate_masked_mae",
+    "greenshields_flow_occupancy",
     "load_model_artifact",
     "load_speed_csv",
     "make_enhanced_sensor_features",
@@ -74,6 +77,7 @@ __all__ = [
     "save_model_artifact",
     "time_features",
     "time_split",
+    "to_networkx_graph",
     "tune_random_forest",
     "tune_randomized_search",
     "tune_xgboost",

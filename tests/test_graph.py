@@ -8,6 +8,7 @@ from traffic_prediction.graph import (
     build_directed_distance_adjacency,
     build_distance_adjacency,
     compute_dual_diffusion_matrices,
+    to_networkx_graph,
 )
 
 
@@ -99,4 +100,53 @@ def test_compute_dual_diffusion_matrices():
     # Row sums of forward transition must be approx 1.0
     np.testing.assert_allclose(P_f.sum(axis=1), np.ones(3), rtol=1e-5)
     np.testing.assert_allclose(P_b.sum(axis=1), np.ones(3), rtol=1e-5)
+
+
+def test_to_networkx_graph():
+    """Verify conversion of adjacency matrix to NetworkX Graph and DiGraph."""
+    import networkx as nx
+
+    adj = np.array(
+        [
+            [1.0, 0.5, 0.0],
+            [0.5, 1.0, 0.8],
+            [0.0, 0.8, 1.0],
+        ],
+        dtype=np.float32,
+    )
+    sensor_ids = ["s1", "s2", "s3"]
+    locations = pd.DataFrame(
+        {
+            "sensor_id": ["s1", "s2", "s3"],
+            "latitude": [34.0, 34.1, 34.2],
+            "longitude": [-118.0, -118.1, -118.2],
+        }
+    )
+
+    # Test undirected graph
+    G = to_networkx_graph(adj, sensor_ids, directed=False, locations=locations)
+    assert isinstance(G, nx.Graph)
+    assert not G.is_directed()
+    assert G.number_of_nodes() == 3
+    assert G.number_of_edges() == 2  # (s1, s2) and (s2, s3)
+    assert G.nodes["s1"]["latitude"] == 34.0
+    assert G.nodes["s1"]["longitude"] == -118.0
+    assert G.edges["s1", "s2"]["weight"] == 0.5
+
+    # Test directed graph
+    directed_adj = np.array(
+        [
+            [1.0, 0.5, 0.0],
+            [0.0, 1.0, 0.8],
+            [0.0, 0.0, 1.0],
+        ],
+        dtype=np.float32,
+    )
+    DG = to_networkx_graph(directed_adj, sensor_ids, directed=True)
+    assert isinstance(DG, nx.DiGraph)
+    assert DG.is_directed()
+    assert DG.number_of_edges() == 2
+    assert DG.has_edge("s1", "s2")
+    assert not DG.has_edge("s2", "s1")
+
 

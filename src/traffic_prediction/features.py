@@ -6,6 +6,58 @@ import numpy as np
 import pandas as pd
 
 
+def greenshields_flow_occupancy(
+    speed: np.ndarray,
+    v_free: float = 65.0,
+    k_jam: float = 200.0,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute macroscopic traffic flow rate and occupancy via Greenshields fundamental diagram.
+
+    Under Greenshields traffic stream model, vehicle speed decreases linearly with density:
+        v = v_free * (1 - k / k_jam)
+    Solving for density yields:
+        k = k_jam * max(0, 1 - v / v_free)
+    The flow rate (q = k * v) and lane occupancy ratio (occ = k / k_jam) are:
+        q = k_jam * v * max(0, 1 - v / v_free)  [veh/hour/lane]
+        occ = max(0, 1 - v / v_free)             [dimensionless ratio in [0, 1]]
+
+    Parameters
+    ----------
+    speed : np.ndarray
+        Observed or predicted vehicle speed in mph (scalar, 1D, or 2D array). NaNs are preserved.
+    v_free : float, default=65.0
+        Free-flow highway speed in mph.
+    k_jam : float, default=200.0
+        Highway jam density in vehicles per mile per lane.
+
+    Returns
+    -------
+    flow : np.ndarray
+        Estimated vehicular flow rate in vehicles per hour per lane.
+    occupancy : np.ndarray
+        Lane occupancy / density ratio ranging between 0.0 (free flow) and 1.0 (jammed).
+    """
+    if v_free <= 0 or k_jam <= 0:
+        raise ValueError("v_free and k_jam must be positive values.")
+
+    arr_speed = np.asarray(speed, dtype=np.float32)
+    # Relative speed reduction (clipped between 0 and 1 for finite non-negative values)
+    speed_ratio = np.clip(arr_speed / v_free, 0.0, 1.0)
+    density_ratio = 1.0 - speed_ratio
+
+    # Flow rate q = k * v = k_jam * density_ratio * speed
+    flow = (k_jam * density_ratio * np.clip(arr_speed, 0.0, None)).astype(np.float32, copy=False)
+    occupancy = density_ratio.astype(np.float32, copy=False)
+
+    # Preserve NaN masks for sensor outages
+    nan_mask = np.isnan(arr_speed)
+    if np.any(nan_mask):
+        flow[nan_mask] = np.nan
+        occupancy[nan_mask] = np.nan
+
+    return flow, occupancy
+
+
 def time_features(index: pd.DatetimeIndex) -> np.ndarray:
     """Encode time-of-day and weekday as cyclic sine/cosine features."""
     minute = (index.hour * 60 + index.minute).to_numpy()

@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from traffic_prediction.features import (
+    greenshields_flow_occupancy,
     make_enhanced_sensor_features,
     make_panel_features,
     make_rolling_features,
@@ -146,3 +147,33 @@ def test_make_panel_features_validation_errors(sample_traffic_series):
             np.array([5], dtype=np.int64),
             np.array([0], dtype=np.int64),
         )
+
+
+def test_greenshields_flow_occupancy():
+    """Verify Greenshields macroscopic flow rate and occupancy calculations."""
+    speeds = np.array([0.0, 32.5, 65.0, np.nan], dtype=np.float32)
+    flow, occ = greenshields_flow_occupancy(speeds, v_free=65.0, k_jam=200.0)
+
+    # At v = 0: flow = 0, occ = 1.0 (jammed)
+    assert flow[0] == 0.0
+    assert occ[0] == 1.0
+
+    # At v = 32.5 (v_free / 2): capacity flow q_max = k_jam * v_free / 4 = 200 * 65 / 4 = 3250 veh/hr
+    # occ = 0.5
+    np.testing.assert_allclose(flow[1], 3250.0, atol=1e-2)
+    np.testing.assert_allclose(occ[1], 0.5, atol=1e-4)
+
+    # At v = 65 (free flow): flow = 0, occ = 0.0 (empty)
+    assert flow[2] == 0.0
+    assert occ[2] == 0.0
+
+    # Outages (NaN) preserved
+    assert np.isnan(flow[3])
+    assert np.isnan(occ[3])
+
+    # Validation errors
+    with pytest.raises(ValueError, match="must be positive"):
+        greenshields_flow_occupancy(speeds, v_free=0.0)
+    with pytest.raises(ValueError, match="must be positive"):
+        greenshields_flow_occupancy(speeds, k_jam=-10.0)
+

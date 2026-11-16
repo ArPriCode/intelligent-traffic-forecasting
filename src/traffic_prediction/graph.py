@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 
@@ -132,4 +133,72 @@ def compute_dual_diffusion_matrices(
             P_b[i, i] = 1.0
 
     return P_f.astype(np.float32, copy=False), P_b.astype(np.float32, copy=False)
+
+
+def to_networkx_graph(
+    adjacency: np.ndarray,
+    sensor_ids: list[str],
+    *,
+    directed: bool = False,
+    locations: pd.DataFrame | None = None,
+) -> nx.Graph | nx.DiGraph:
+    """Convert an adjacency matrix into a NetworkX Graph or DiGraph with node metadata.
+
+    Parameters
+    ----------
+    adjacency : np.ndarray
+        Square 2D matrix of edge weights (connectivity or Gaussian distance).
+    sensor_ids : list[str]
+        Ordered list of sensor IDs matching the matrix dimensions.
+    directed : bool, default=False
+        If True, creates a directed graph (nx.DiGraph); otherwise an undirected graph (nx.Graph).
+    locations : pd.DataFrame, optional
+        DataFrame containing 'sensor_id', 'latitude', and 'longitude' to attach as node attributes.
+
+    Returns
+    -------
+    graph : nx.Graph or nx.DiGraph
+        NetworkX graph populated with node IDs, coordinates, and weighted edges.
+    """
+    adj = np.asarray(adjacency, dtype=np.float32)
+    if adj.ndim != 2 or adj.shape[0] != adj.shape[1]:
+        raise ValueError("adjacency must be a 2D square matrix.")
+    if len(sensor_ids) != adj.shape[0]:
+        raise ValueError("sensor_ids length must match adjacency matrix dimension.")
+
+    graph = nx.DiGraph() if directed else nx.Graph()
+
+    loc_lookup: dict[str, tuple[float, float]] = {}
+    if locations is not None:
+        if not {"sensor_id", "latitude", "longitude"}.issubset(locations.columns):
+            raise ValueError("locations must contain 'sensor_id', 'latitude', and 'longitude' columns.")
+        for _, row in locations.iterrows():
+            loc_lookup[str(row["sensor_id"])] = (float(row["latitude"]), float(row["longitude"]))
+
+    # Add nodes with metadata
+    for i, s_id in enumerate(sensor_ids):
+        node_attrs: dict[str, int | str | float] = {"index": i, "sensor_id": s_id}
+        if s_id in loc_lookup:
+            lat, lon = loc_lookup[s_id]
+            node_attrs["latitude"] = lat
+            node_attrs["longitude"] = lon
+            node_attrs["pos"] = (lon, lat)
+        graph.add_node(s_id, **node_attrs)
+
+    # Add edges with positive weights (excluding self-loops for network analysis)
+    n_nodes = len(sensor_ids)
+    if directed:
+        for i in range(n_nodes):
+            for j in range(n_nodes):
+                if i != j and adj[i, j] > 0:
+                    graph.add_edge(sensor_ids[i], sensor_ids[j], weight=float(adj[i, j]))
+    else:
+        for i in range(n_nodes):
+            for j in range(i + 1, n_nodes):
+                weight = max(adj[i, j], adj[j, i])
+                if weight > 0:
+                    graph.add_edge(sensor_ids[i], sensor_ids[j], weight=float(weight))
+
+    return graph
+
 
