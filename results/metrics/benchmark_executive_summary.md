@@ -59,3 +59,18 @@
 | 60 min | **Random Forest** | 6.374 | 3.643 | 1.75x |
 | 60 min | **Residual Hybrid** | 6.319 | 3.581 | 1.76x |
 | 60 min | **XGBoost** | 7.277 | 3.853 | 1.89x |
+
+---
+
+## 3. Spatial Network Congestion Mapping & Shockwave Verification
+
+> [!TIP]
+> Spatial snapshot evaluated during peak evening rush hour across 207 highway loop detectors.
+
+* **Peak Congestion Timestamp**: `2012-06-14 17:45:00`
+* **Active Highway Detectors**: 186 / 207 stations reporting
+* **Network-Wide Rush Hour Speed**: **38.06 mph**
+* **GAT 15m Network MAE**: **4.855 mph** (Median: **3.387 mph**)
+* **Severe Highway Bottlenecks (<35 mph)**: **104** sensor stations
+* **High-Resolution Spatial Map Artifact**: `results/figures/31_metr_la_network_congestion_maps.png`
+

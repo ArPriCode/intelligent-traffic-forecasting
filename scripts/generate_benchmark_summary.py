@@ -84,6 +84,23 @@ def generate_benchmark_summary(
                 ratio = p_mae / op_mae if op_mae > 0 else np.nan
                 lines.append(f"| {h} min | **{m}** | {p_mae:.3f} | {op_mae:.3f} | {ratio:.2f}x |")
 
+    # 3. Spatial Network Congestion Mapping Deliverable
+    snapshot_path = comparison_csv.parent / "metr_la_spatial_congestion_snapshot.csv"
+    if snapshot_path.is_file():
+        snap_df = pd.read_csv(snapshot_path)
+        valid_snap = snap_df[snap_df["ground_truth_speed_mph"].notna()]
+        lines.append("\n---\n")
+        lines.append("## 3. Spatial Network Congestion Mapping & Shockwave Verification\n")
+        lines.append("> [!TIP]")
+        lines.append("> Spatial snapshot evaluated during peak evening rush hour across 207 highway loop detectors.\n")
+        lines.append(f"* **Peak Congestion Timestamp**: `{valid_snap['target_timestamp'].iloc[0]}`")
+        lines.append(f"* **Active Highway Detectors**: {len(valid_snap)} / {len(snap_df)} stations reporting")
+        lines.append(f"* **Network-Wide Rush Hour Speed**: **{valid_snap['ground_truth_speed_mph'].mean():.2f} mph**")
+        lines.append(f"* **GAT 15m Network MAE**: **{valid_snap['gat_abs_error_mph'].mean():.3f} mph** (Median: **{valid_snap['gat_abs_error_mph'].median():.3f} mph**)")
+        bottlenecks = (valid_snap["ground_truth_speed_mph"] < 35.0).sum()
+        lines.append(f"* **Severe Highway Bottlenecks (<35 mph)**: **{bottlenecks}** sensor stations")
+        lines.append(f"* **High-Resolution Spatial Map Artifact**: `results/figures/31_metr_la_network_congestion_maps.png`\n")
+
     report_text = "\n".join(lines) + "\n"
 
     if output_md is not None:

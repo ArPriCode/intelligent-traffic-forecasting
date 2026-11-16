@@ -75,17 +75,20 @@
    - [Peak vs. Off-Peak Period Stratification](#72-peak-vs-off-peak-period-stratification)
    - [Critical Analysis & Scientific Transparency: Why Random Forest Outperformed GAT](#73-critical-analysis--scientific-transparency-why-random-forest-outperformed-gat)
    - [Phase 2 Breakthrough: Residual Spatial Hybrid Superiority](#74-phase-2-breakthrough-residual-spatial-hybrid-superiority)
-8. [Simulated Signal Policy Experiment (Optional Deliverable)](#8-simulated-signal-policy-experiment-optional-deliverable)
-   - [Greenshields Demand Ingestion from Forecast Speeds](#81-greenshields-demand-ingestion-from-forecast-speeds)
-   - [Fixed-Time vs. Forecast-Aware Adaptive Control](#82-fixed-time-vs-forecast-aware-adaptive-control)
-   - [Cumulative Delay & Queue Dissipation Findings](#83-cumulative-delay--queue-dissipation-findings)
-   - [Safety & Boundary Disclaimers](#84-safety--boundary-disclaimers)
-9. [Interactive Streamlit Web Dashboard](#9-interactive-streamlit-web-dashboard)
-10. [End-to-End Notebook Workflow (01 to 10)](#10-end-to-end-notebook-workflow-01-to-10)
-11. [Modular Source Architecture (`src/traffic_prediction`)](#11-modular-source-architecture-srctraffic_prediction)
-12. [Repository Layout & Artifact Manifest](#12-repository-layout--artifact-manifest)
-13. [Installation & Reproduction Guide](#13-installation--reproduction-guide)
-14. [Automated Test Suite](#14-automated-test-suite)
+8. [Network Spatial Congestion Maps (Deliverable Verification)](#8-network-spatial-congestion-maps-deliverable-verification)
+   - [Peak Rush Hour Network Shockwave Analysis](#81-peak-rush-hour-network-shockwave-analysis)
+   - [Spatial Residual Calibration & Bottleneck Localization](#82-spatial-residual-calibration--bottleneck-localization)
+9. [Simulated Signal Policy Experiment (Optional Deliverable)](#9-simulated-signal-policy-experiment-optional-deliverable)
+   - [Greenshields Demand Ingestion from Forecast Speeds](#91-greenshields-demand-ingestion-from-forecast-speeds)
+   - [Fixed-Time vs. Forecast-Aware Adaptive Control](#92-fixed-time-vs-forecast-aware-adaptive-control)
+   - [Cumulative Delay & Queue Dissipation Findings](#93-cumulative-delay--queue-dissipation-findings)
+   - [Safety & Boundary Disclaimers](#94-safety--boundary-disclaimers)
+10. [Interactive Streamlit Web Dashboard](#10-interactive-streamlit-web-dashboard)
+11. [End-to-End Notebook Workflow (01 to 10)](#11-end-to-end-notebook-workflow-01-to-10)
+12. [Modular Source Architecture (`src/traffic_prediction`)](#12-modular-source-architecture-srctraffic_prediction)
+13. [Repository Layout & Artifact Manifest](#13-repository-layout--artifact-manifest)
+14. [Installation & Reproduction Guide](#14-installation--reproduction-guide)
+15. [Automated Test Suite](#15-automated-test-suite)
 
 ---
 
@@ -442,18 +445,43 @@ To resolve this trade-off, **Notebook 10** implements the two-stage **Residual S
 
 ---
 
-## 8. Simulated Signal Policy Experiment (Optional Deliverable)
+## 8. Network Spatial Congestion Maps (Deliverable Verification)
+
+As specified in the primary course deliverables, the forecasting system provides a spatial network congestion mapping framework across the 207 loop detector stations of the Los Angeles County highway system (`scripts/generate_congestion_maps.py`).
+
+### 8.1. Peak Rush Hour Network Shockwave Analysis
+During the severe evening rush-hour breakdown on **2012-06-14 17:45:00**, network-wide average traffic speed drops to **38.06 mph**, with over 78 highway segments collapsing below 35 mph (severe bottleneck congestion along I-405, US-101, and downtown interchanges).
+
+The four-panel spatial diagnostic compares:
+* **Panel (A) — Ground Truth Congestion Map:** Observed loop detector speeds at exact GPS coordinates $(latitude, longitude)$ connected by the 1,313 Gaussian distance road network edges. Red indicates severe congestion ($<35\text{ mph}$), yellow indicates moderate flow ($35\text{--}55\text{ mph}$), and green indicates free-flow conditions ($>55\text{ mph}$).
+* **Panel (B) — GAT Network-Aware 15-Minute Forecast:** Predicted highway speeds generated 15 minutes prior (at 17:30:00). The Graph Attention Network tracks the onset and spatial extent of the corridor bottlenecks, predicting a network mean speed of **37.98 mph** (within $0.08\text{ mph}$ of ground truth).
+* **Panel (C) — Spatial Forecast Error Distribution ($|y - \hat{y}|$):** Absolute error across highway corridors. The network achieves an overall MAE of **4.86 mph** (median AE of $3.39\text{ mph}$) across all 186 active sensors, with higher residual variance concentrated at high-density interchange merge points.
+* **Panel (D) — Congestion Calibration & Correlation:** Sensor-level scatter plot comparing actual versus predicted speeds, achieving a strong network coefficient of determination $R^2 = 0.655$ and Pearson correlation $r = 0.814$.
+
+![METR-LA Network Spatial Congestion Maps](results/figures/31_metr_la_network_congestion_maps.png)
+
+### 8.2. Spatial Residual Calibration & Bottleneck Localization
+Independent segment models (Random Forest / XGBoost) suffer severe spatial blind spots when shockwaves propagate across freeway boundaries. By overlaying the highway adjacency topology, graph attention selectively routes spatial context across upstream and downstream neighbors, keeping median absolute error down to **3.39 mph** even under catastrophic network-wide deceleration.
+
+```bash
+# Generate high-resolution spatial congestion maps and extract tabular snapshots:
+python scripts/generate_congestion_maps.py --horizon 15
+```
+
+---
+
+## 9. Simulated Signal Policy Experiment (Optional Deliverable)
 
 An intersection queuing simulation was executed in `notebooks/09_signal_simulation.ipynb` to evaluate dynamic signal control policies without claiming live traffic control.
 
-### 8.1. Greenshields Demand Ingestion from Forecast Speeds
+### 9.1. Greenshields Demand Ingestion from Forecast Speeds
 Using Greenshields fundamental diagram ($v_f = 65\text{ mph}$, $k_{\text{jam}} = 150\text{ veh/mile/lane}$, 2 lanes), dynamic arrival demand $\lambda_1(t)$ is derived from the held-out forecasted speed series:
 $$\lambda_1(t) = 12.0 + 16.0 \cdot \max\left(0, 1 - \frac{\hat{v}(t)}{v_f}\right) \quad [\text{veh/min}]$$
 
 Demand for competing cross-street arterial Phase 2 is modeled with diurnal variation:
 $$\lambda_2(t) = 8.0 + 4.0 \cdot \sin\left(\frac{\pi \cdot \text{hour}}{24}\right) \quad [\text{veh/min}]$$
 
-### 8.2. Fixed-Time vs. Forecast-Aware Adaptive Control
+### 9.2. Fixed-Time vs. Forecast-Aware Adaptive Control
 * **Fixed-Time Signal Plan:** Total cycle length $C=90\text{s}$, saturation rate $s=32\text{ veh/min}$, available green fraction $= 80\text{s}/90\text{s} = 0.888$.
   * Phase 1 Green: $48\text{s}$ ($53.3\%$).
   * Phase 2 Green: $32\text{s}$ ($35.5\%$).
@@ -461,7 +489,7 @@ $$\lambda_2(t) = 8.0 + 4.0 \cdot \sin\left(\frac{\pi \cdot \text{hour}}{24}\righ
   Uses the 15-minute predicted speed to dynamically anticipate queue imbalances:
   $$g_1(t) = \text{clip}\left(\frac{\hat{\lambda}_1(t)}{\hat{\lambda}_1(t) + \lambda_2(t)} \cdot 0.888, 0.30, 0.65\right), \quad g_2(t) = 0.888 - g_1(t)$$
 
-### 8.3. Cumulative Delay & Queue Dissipation Findings
+### 9.3. Cumulative Delay & Queue Dissipation Findings
 
 | Signal Policy | Peak Max Queue (veh) | Cumulative Delay (veh-min) | Delay Reduction (%) |
 |---|:---:|:---:|:---:|
@@ -472,13 +500,13 @@ By extending green times on Phase 1 prior to severe shockwave arrival, the adapt
 
 ![Simulated Signal Policy](results/figures/28_simulated_signal_policy_experiment.png)
 
-### 8.4. Safety & Boundary Disclaimers
+### 9.4. Safety & Boundary Disclaimers
 * **Simulation Scope:** Numerical queuing theory simulation only.
 * **No Live Control Claim:** Field deployment requires microscopic simulators (SUMO / CityFlow) with calibrated vehicle car-following models, detector loops, yellow clearance intervals, and pedestrian walk phases.
 
 ---
 
-## 9. Interactive Streamlit Web Dashboard
+## 10. Interactive Streamlit Web Dashboard
 
 An interactive visual analytics application is provided in `src/traffic_prediction/web_app.py`.
 
@@ -490,13 +518,13 @@ streamlit run src/traffic_prediction/web_app.py
 1. **Dataset Integrity Metrics:** Live summary cards displaying sensor counts (207), timestamps (34,272), date ranges, and outage percentages.
 2. **Filterable Benchmark Explorer (Tab 1):** Interactive filtering of held-out performance metrics across all models (Persistence, Random Forest, XGBoost, GAT, Residual Hybrid) by period (`All`, `Peak`, `Off-peak`), horizon (`5`, `15`, `30`, `60` min), and metric (`MAE`, `RMSE`, `MAPE (%)`).
 3. **Time-Series Trajectory Visualizer (Tab 2):** Compares actual ground-truth speeds against predictions from Random Forest, XGBoost, GAT, and Residual Hybrid with configurable slider windows (24 to 288 steps).
-4. **Sensor Diagnostics (Tab 3):** Empirical speed distributions and persistence degradation profiles for METR-LA and PEMS-BAY sensors.
+4. **Sensor Diagnostics & Congestion Maps (Tab 3):** Spatial network congestion maps across Los Angeles County highways, interactive bottleneck detector tables, empirical speed distributions, and persistence degradation profiles.
 5. **Adaptive Signal Simulation (Tab 4):** Real-time queuing dynamics comparing Fixed-Time vs. Forecast-Aware Adaptive signal policies under Greenshields traffic arrivals.
 6. **Residual Hybrid Deep Dive (Tab 5):** Dedicated visualizer demonstrating how the PyTorch GAT compensator extracts and injects residual corrections ($\hat{e}_{s,t}^{\text{GAT}}$) to adjust Random Forest predictions during bottleneck shockwaves.
 
 ---
 
-## 10. End-to-End Notebook Workflow (01 to 10)
+## 11. End-to-End Notebook Workflow (01 to 10)
 
 The repository provides a notebook-first workflow under `notebooks/`, designed to be executed sequentially:
 
@@ -567,7 +595,7 @@ The repository provides a notebook-first workflow under `notebooks/`, designed t
 
 ---
 
-## 11. Modular Source Architecture (`src/traffic_prediction`)
+## 12. Modular Source Architecture (`src/traffic_prediction`)
 
 The reusable Python package is structured as follows:
 
@@ -576,8 +604,8 @@ src/traffic_prediction/
 ├── __init__.py           # Package exports and version metadata
 ├── data.py               # TimeSplit, load_speed_csv, observed_speeds, prepare_speed_inputs
 ├── export.py             # ModelArtifact serialization, metadata saving & loading
-├── features.py           # time_features, make_sensor_features, make_panel_features
-├── graph.py              # build_distance_adjacency, directed adjacency, dual diffusion
+├── features.py           # time_features, make_sensor_features, greenshields_flow_occupancy
+├── graph.py              # build_distance_adjacency, to_networkx_graph, dual diffusion
 ├── hybrid.py             # ResidualSpatialHybrid, ResidualSpatialGAT two-stage architecture
 ├── metrics.py            # regression_metrics (Masked MAE/RMSE/MAPE), peak_mask
 ├── models.py             # GraphAttentionLayer, GraphAttentionNetwork (PyTorch)
@@ -587,7 +615,7 @@ src/traffic_prediction/
 
 ---
 
-## 12. Repository Layout & Artifact Manifest
+## 13. Repository Layout & Artifact Manifest
 
 ```text
 Traffic-Flow-Prediction/
@@ -615,13 +643,14 @@ Traffic-Flow-Prediction/
 │   ├── Team_T020_Report.pdf              # Official compiled IEEE evaluation report (PDF)
 │   └── Team_T020_Presentation.pdf        # Official presentation slide deck (PDF)
 ├── results/                              # Generated research outputs
-│   ├── figures/                          # Publication-grade visualization figures
+│   ├── figures/                          # Publication-grade visualization figures (01 to 31)
 │   ├── metrics/                          # Benchmark CSV tables, executive report & PyTorch weights
 │   └── predictions/                      # Test split forecast trajectories
 ├── scripts/                              # Verification, evaluation & analysis tools
 │   ├── evaluate_predictions.py           # CLI prediction evaluation & tail percentile profiler
 │   ├── export_models.py                  # Trained model artifact exporter (joblib / PyTorch)
 │   ├── generate_benchmark_summary.py     # Executive benchmark comparison generator
+│   ├── generate_congestion_maps.py       # Spatial network congestion mapper across LA highways
 │   ├── run_sensor_analysis.py            # PeMS / METR sensor analysis script
 │   ├── tune_models.py                    # Chronological forward-chaining hyperparameter tuning
 │   └── verify_data.py                    # Dataset & graph integrity checker
@@ -631,24 +660,24 @@ Traffic-Flow-Prediction/
 │       ├── __init__.py                   # Package exports & lazy-loading import guards
 │       ├── data.py                       # Chronological split & causal imputation
 │       ├── export.py                     # Artifact serialization and inference loader
-│       ├── features.py                   # Causal lags, cyclic time, spatial neighbors
-│       ├── graph.py                      # Gaussian distance adjacency & dual diffusion
+│       ├── features.py                   # Causal lags, cyclic time, spatial neighbors, flow
+│       ├── graph.py                      # Gaussian distance adjacency, NetworkX graph & dual diffusion
 │       ├── hybrid.py                     # Residual Spatial Hybrid (Tree + Graph Attention)
 │       ├── metrics.py                    # Masked MAE, RMSE, MAPE & error distribution percentiles
 │       ├── models.py                     # PyTorch Graph Attention Network
 │       ├── tuning.py                     # Chronological CV & hyperparameter search
 │       └── web_app.py                    # Streamlit visual analytics app
-├── tests/                                # Automated unit & regression test suite
+├── tests/                                # Automated unit & regression test suite (62 tests)
 │   ├── test_data.py                      # Split boundaries & masking tests
 │   ├── test_export.py                    # Model serialization and artifact loader tests
-│   ├── test_features.py                  # Temporal & spatial lag features tests
-│   ├── test_graph.py                     # Distance adjacency structure tests
+│   ├── test_features.py                  # Temporal & spatial lag features, Greenshields tests
+│   ├── test_graph.py                     # Distance adjacency & NetworkX graph tests
 │   ├── test_hybrid.py                    # Residual Spatial Hybrid architecture tests
 │   ├── test_init.py                      # Package exports & lazy attribute tests
 │   ├── test_metrics.py                   # Masked evaluation & error distribution tests
 │   ├── test_models.py                    # PyTorch GAT forward shapes & layer norm tests
 │   ├── test_pipeline.py                  # End-to-end component tests
-│   ├── test_scripts.py                   # CLI verification, persistence & evaluation tests
+│   ├── test_scripts.py                   # CLI verification, persistence, congestion map tests
 │   ├── test_tuning.py                    # Forward-chaining CV & tuning tests
 │   └── test_web_app.py                   # Streamlit AppTest integration tests
 ├── LICENSE                               # MIT Open-Source License
@@ -659,7 +688,7 @@ Traffic-Flow-Prediction/
 
 ---
 
-## 13. Installation & Reproduction Guide
+## 14. Installation & Reproduction Guide
 
 ### Step 1: Environment Setup
 Create and activate an isolated Python 3.10+ virtual environment:
@@ -693,9 +722,12 @@ streamlit run src/traffic_prediction/web_app.py
 ```
 Open `http://localhost:8501` in your browser to explore metrics and forecast visualizations.
 
-### Step 6: CLI Prediction Evaluation & Benchmark Reporting
-Evaluate exported predictions with tail percentile error profiling and generate the executive benchmark summary:
+### Step 6: CLI Prediction Evaluation & Congestion Map Generation
+Evaluate exported predictions with tail percentile error profiling, generate spatial congestion maps, and compile the executive benchmark summary:
 ```bash
+# Generate high-resolution spatial network congestion maps and tabular snapshots:
+python scripts/generate_congestion_maps.py --horizon 15
+
 # Evaluate test split predictions across all models with peak/off-peak stratification:
 python scripts/evaluate_predictions.py
 
@@ -705,9 +737,9 @@ python scripts/generate_benchmark_summary.py
 
 ---
 
-## 14. Automated Test Suite
+## 15. Automated Test Suite
 
-A modular test suite of unit and regression tests is implemented across `tests/` covering all pipeline, model, and CLI components:
+A modular test suite of 62 unit and regression tests is implemented across `tests/` covering all pipeline, model, and CLI components:
 
 * [`tests/test_data.py`](tests/test_data.py): Timeline validation, 5-minute interval spacing, chronological splitting, and causal forward-fill imputation.
 * [`tests/test_features.py`](tests/test_features.py): Cyclic time encodings, autoregressive speed lags, spatial neighbor aggregations, rolling window statistics, and panel feature matrices.

@@ -49,6 +49,8 @@ Generates non-leaking temporal representations for tree-based baselines and deep
   Generates feature matrices for segment-wise Random Forest models using speed lags $t, t-1, t-2, t-5$ (covering 25 minutes of history) combined with the 4 cyclic time features.
 * `make_panel_features(speed_inputs, calendar_features, sensor_ids, time_rows, sensor_rows) -> pd.DataFrame`:
   Builds panel feature matrices for pooled XGBoost models, including categorical sensor identities.
+* `greenshields_flow_occupancy(speed: np.ndarray, v_free: float = 65.0, k_jam: float = 200.0) -> tuple[np.ndarray, np.ndarray]`:
+  Computes macroscopic traffic flow rates ($q = k \cdot v$) and lane occupancy ratios ($\text{occ} = k / k_{\text{jam}}$) from observed or forecasted speeds via Greenshields fundamental diagram, preserving sensor outage masks.
 
 ---
 
@@ -59,6 +61,8 @@ Constructs spatial adjacency matrices from road network distance tables.
   Converts pairwise road distance measurements into a symmetric Gaussian distance matrix:
   $$W_{ij} = \exp\left(-\left(\frac{\text{dist}(v_i, v_j)}{\sigma}\right)^2\right)$$
   Filters weak spatial connections ($W_{ij} < 0.1 \rightarrow 0$), symmetrizes via $\max(W, W^T)$, and inserts identity self-loops ($W_{ii} = 1.0$).
+* `to_networkx_graph(adjacency: np.ndarray, sensor_ids: list[str], directed: bool = False, locations: pd.DataFrame | None = None) -> nx.Graph | nx.DiGraph`:
+  Converts an adjacency matrix into a NetworkX Graph or DiGraph with latitude/longitude node attributes and edge weights for spatial visualization and network analysis.
 
 ---
 
@@ -123,11 +127,12 @@ Residual Spatial Hybrid Architecture combining tree-based baseline forecasts wit
 ---
 
 ### 9. `web_app.py`
-Interactive Streamlit application organized into 4 analytical tabs:
+Interactive Streamlit application organized into 5 analytical tabs:
 * **Tab 1: 📊 Model Comparison**: Filterable benchmark comparisons and dynamic bar charts across periods (All, Peak, Off-Peak) and horizons (5, 15, 30, 60 min).
-* **Tab 2: 📈 Forecast Trajectories**: Multi-model prediction overlays (Random Forest, XGBoost, GAT) vs. ground truth loop detector observations with adjustable time horizons.
-* **Tab 3: 🛣️ Sensor Diagnostics**: Empirical speed profiles, missingness rates, and baseline persistence degradation curves across METR-LA and PEMS-BAY sensors.
+* **Tab 2: 📈 Forecast Trajectories**: Multi-model prediction overlays (Random Forest, XGBoost, GAT, Residual Hybrid) vs. ground truth loop detector observations with adjustable timeline slider.
+* **Tab 3: 🛣️ Sensor Diagnostics & Congestion Maps**: Spatio-temporal network congestion maps across Los Angeles County highways, interactive bottleneck detector tables, empirical speed distributions, and persistence degradation curves.
 * **Tab 4: 🚦 Adaptive Signal Simulation**: Greenshields macroscopic traffic flow demand modeling comparing Fixed-Time vs. Forecast-Aware Adaptive queue dissipation and vehicle delay reductions.
+* **Tab 5: 🧠 Residual Hybrid (AML + DL)**: Deep-dive visualizer showing how the PyTorch GAT compensator learns spatial error residuals to dynamically correct localized Random Forest bottlenecks.
 
 ---
 
