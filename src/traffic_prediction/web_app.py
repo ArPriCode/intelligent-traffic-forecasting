@@ -94,12 +94,13 @@ def run_dashboard() -> None:
 
     st.divider()
 
-    tab1, tab2, tab3, tab4 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
         [
             "📊 Model Comparison",
             "📈 Forecast Trajectories",
             "🛣️ Sensor Diagnostics",
             "🚦 Adaptive Signal Simulation",
+            "🧠 Residual Hybrid (AML + DL)",
         ]
     )
 
@@ -157,6 +158,7 @@ def run_dashboard() -> None:
             "Random Forest": ("metr_la_random_forest_sample_sensor.csv", "predicted_speed"),
             "XGBoost": ("metr_la_xgboost_sample_sensor.csv", "predicted_speed_15min"),
             "GAT": ("metr_la_gat_sample_sensor.csv", "predicted_speed_15min"),
+            "Residual Hybrid": ("metr_la_hybrid_sample_sensor.csv", "predicted_speed_15min"),
         }
         actual_series: pd.Series | None = None
         model_series: dict[str, pd.Series] = {}
@@ -297,6 +299,82 @@ def run_dashboard() -> None:
             )
         else:
             st.info(f"Signal policy figure not found: {sim_fig.name}")
+
+    with tab5:
+        st.subheader("Residual Spatial Hybrid Architecture (Random Forest + GAT Fusion)")
+        st.markdown(
+            "Two-stage spatio-temporal learning: A localized **Random Forest** predicts base speeds, "
+            "and a **PyTorch Graph Attention Network (GAT)** over the highway distance graph predicts and corrects "
+            "spatial error residuals."
+        )
+
+        hybrid_pred_path = PREDICTIONS_PATH / "metr_la_hybrid_sample_sensor.csv"
+        hybrid_fig_path = FIGURES_PATH / "30_residual_hybrid_model_comparison.png"
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("5m Test MAE", "2.482 mph", "-0.037 vs RF (2.519)")
+        c2.metric("15m Test MAE", "3.097 mph", "-0.022 vs RF (3.119)")
+        c3.metric("30m Test MAE", "3.593 mph", "-0.043 vs RF (3.635)")
+        c4.metric("60m Test MAE", "4.107 mph", "-0.085 vs RF (4.192)")
+
+        st.markdown("---")
+        st.markdown("#### 🔬 How GAT Corrects Localized Random Forest Errors")
+        st.markdown(
+            "Independent segment models have zero visibility into propagating corridor congestion. "
+            "When a downstream bottleneck occurs, the base Random Forest model lags behind. "
+            "The Graph Attention Network observes spatial shockwaves across connected loop detectors and "
+            r"dynamically outputs a residual correction $\hat{e}_{s,t}^{\text{GAT}}$ to pull the composite "
+            "forecast toward the ground truth."
+        )
+
+        if hybrid_pred_path.is_file():
+            h_df = read_csv(str(hybrid_pred_path)).copy()
+            h_df["timestamp"] = pd.to_datetime(h_df["timestamp"], errors="coerce")
+            h_df = h_df.dropna(subset=["timestamp"]).set_index("timestamp")
+
+            w_col1, w_col2 = st.columns([2, 1])
+            with w_col2:
+                h_total = len(h_df)
+                h_window = st.slider(
+                    "Timeline Window (Steps)",
+                    min_value=24,
+                    max_value=min(288, h_total),
+                    value=min(144, h_total),
+                    step=12,
+                    key="hybrid_slider",
+                )
+
+            sub_h = h_df.tail(h_window)
+            st.markdown("**1. Speed Trajectory: Ground Truth vs. Base RF vs. Residual Hybrid**")
+            st.line_chart(
+                sub_h[["actual_speed", "base_rf_speed_15min", "predicted_speed_15min"]].rename(
+                    columns={
+                        "actual_speed": "Ground Truth",
+                        "base_rf_speed_15min": "Base Random Forest",
+                        "predicted_speed_15min": "Residual Hybrid (Composite Final)",
+                    }
+                ),
+                height=340,
+            )
+
+            st.markdown(r"**2. Spatial GAT Residual Correction Signal ($\hat{e}_{s,t}^{\text{GAT}}$)**")
+            st.caption(
+                "Positive values boost speed under-predictions; negative values pull down over-predictions during shockwave build-up."
+            )
+            st.line_chart(
+                sub_h[["gat_residual_15min"]].rename(
+                    columns={"gat_residual_15min": "GAT Residual Adjustment (mph)"}
+                ),
+                height=220,
+            )
+
+        if hybrid_fig_path.is_file():
+            st.markdown("---")
+            st.markdown("#### 📊 Multi-Horizon Benchmark Comparison (All Evaluated Models)")
+            render_image(
+                str(hybrid_fig_path),
+                caption="Comparative Test MAE across Horizons for Persistence, Random Forest, XGBoost, GAT, and Residual Hybrid",
+            )
 
     st.divider()
     st.info(
