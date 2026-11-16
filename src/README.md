@@ -9,11 +9,13 @@ The `traffic_prediction` package provides production-grade, modular Python utili
 ```text
 src/
 └── traffic_prediction/
-    ├── __init__.py           # Package exports and semantic versioning
+    ├── __init__.py           # Package exports, lazy loader, and semantic versioning
     ├── data.py               # Timeline validation, chronological splitting, causal imputation
+    ├── export.py             # Model artifact serialization and inference loader (joblib / PyTorch)
     ├── features.py           # Autoregressive speed lags, cyclic calendar embeddings, spatial neighbors
-    ├── graph.py              # Thresholded Gaussian distance adjacency builder
-    ├── metrics.py            # Masked MAE, RMSE, MAPE over valid positive observations
+    ├── graph.py              # Thresholded Gaussian distance adjacency & dual diffusion operators
+    ├── hybrid.py             # Residual Spatial Hybrid (Tree residual + Graph Attention)
+    ├── metrics.py            # Masked MAE, RMSE, MAPE, and tail error percentile profiling
     ├── models.py             # PyTorch GraphAttentionLayer & GraphAttentionNetwork
     ├── tuning.py             # Leakage-free forward-chaining chronological cross-validation
     └── web_app.py            # Streamlit dashboard for interactive forecast analysis
@@ -71,6 +73,8 @@ Computes evaluation statistics over strictly observed, valid traffic targets.
   where $V = \{i : y_i > 0 \land \text{isfinite}(y_i) \land \text{isfinite}(\hat{y}_i)\}$.
 * `peak_mask(timestamps: pd.DatetimeIndex, target_rows: np.ndarray | None = None) -> np.ndarray`:
   Identifies morning peak (07:00–09:59) and evening peak (16:00–18:59) on weekdays (Monday through Friday).
+* `error_distribution(actual: np.ndarray, predicted: np.ndarray, percentiles=(50, 90, 95, 99)) -> dict[str, float | int]`:
+  Calculates median absolute error (p50), tail error percentiles (p90, p95, p99), max error, and mean signed bias over valid targets to uncover peak congestion tail failures.
 
 ---
 
@@ -98,7 +102,27 @@ Provides strictly chronological, forward-chaining cross-validation and hyperpara
 
 ---
 
-### 7. `web_app.py`
+### 7. `export.py`
+Serializes and loads production models with standardized metadata.
+
+* `save_model_artifact(model, filepath, metadata=None) -> Path`:
+  Serializes PyTorch modules (state_dict) or Scikit-Learn/XGBoost regressors (`joblib`) alongside export timestamp, model class, and custom hyperparameter metadata.
+* `load_model_artifact(filepath, model_class=None, **init_kwargs) -> tuple[model, metadata]`:
+  Loads a saved model artifact, re-instantiating PyTorch architectures or unpickling joblib estimators.
+
+---
+
+### 8. `hybrid.py`
+Residual Spatial Hybrid Architecture combining tree-based baseline forecasts with Graph Attention residual learning.
+
+* `ResidualSpatialGAT(adjacency, input_size=10, hidden_size=32, output_size=4)`:
+  PyTorch graph neural network specifically trained to model residual speed errors.
+* `ResidualSpatialHybrid(adjacency, input_size=10, hidden_size=32, output_size=4)`:
+  Hybrid coordinator combining base tree model predictions with neural residual spatial corrections.
+
+---
+
+### 9. `web_app.py`
 Interactive Streamlit application organized into 4 analytical tabs:
 * **Tab 1: 📊 Model Comparison**: Filterable benchmark comparisons and dynamic bar charts across periods (All, Peak, Off-Peak) and horizons (5, 15, 30, 60 min).
 * **Tab 2: 📈 Forecast Trajectories**: Multi-model prediction overlays (Random Forest, XGBoost, GAT) vs. ground truth loop detector observations with adjustable time horizons.

@@ -610,44 +610,46 @@ Traffic-Flow-Prediction/
 │   ├── 07_backtest.ipynb
 │   ├── 08_gat_model.ipynb
 │   ├── 09_signal_simulation.ipynb
-│   └── 10_residual_hybrid_model.ipynb
+│   └── 10_residual_hybrid_model.ipynb   # Residual Spatial Hybrid (RF + GAT) architecture
 ├── report/                               # Academic report and presentation
 │   ├── Team_T020_Report.pdf              # Official compiled IEEE evaluation report (PDF)
 │   └── Team_T020_Presentation.pdf        # Official presentation slide deck (PDF)
 ├── results/                              # Generated research outputs
 │   ├── figures/                          # Publication-grade visualization figures
-│   ├── metrics/                          # Benchmark CSV tables & PyTorch weights
+│   ├── metrics/                          # Benchmark CSV tables, executive report & PyTorch weights
 │   └── predictions/                      # Test split forecast trajectories
-├── scripts/                              # Verification & analysis tools
-│   ├── export_models.py                  # Model artifact serialization CLI
+├── scripts/                              # Verification, evaluation & analysis tools
+│   ├── evaluate_predictions.py           # CLI prediction evaluation & tail percentile profiler
+│   ├── export_models.py                  # Trained model artifact exporter (joblib / PyTorch)
+│   ├── generate_benchmark_summary.py     # Executive benchmark comparison generator
 │   ├── run_sensor_analysis.py            # PeMS / METR sensor analysis script
-│   ├── tune_models.py                    # Chronological hyperparameter search CLI
+│   ├── tune_models.py                    # Chronological forward-chaining hyperparameter tuning
 │   └── verify_data.py                    # Dataset & graph integrity checker
 ├── src/                                  # Reusable Python package
 │   ├── README.md                         # Source package documentation
 │   └── traffic_prediction/
-│       ├── __init__.py                   # Package exports
+│       ├── __init__.py                   # Package exports & lazy-loading import guards
 │       ├── data.py                       # Chronological split & causal imputation
-│       ├── export.py                     # Artifact serialization and loading
+│       ├── export.py                     # Artifact serialization and inference loader
 │       ├── features.py                   # Causal lags, cyclic time, spatial neighbors
-│       ├── graph.py                      # Gaussian distance adjacency builder
-│       ├── hybrid.py                     # Residual Spatial Hybrid architecture
-│       ├── metrics.py                    # Masked MAE, RMSE, MAPE metrics
+│       ├── graph.py                      # Gaussian distance adjacency & dual diffusion
+│       ├── hybrid.py                     # Residual Spatial Hybrid (Tree + Graph Attention)
+│       ├── metrics.py                    # Masked MAE, RMSE, MAPE & error distribution percentiles
 │       ├── models.py                     # PyTorch Graph Attention Network
 │       ├── tuning.py                     # Chronological CV & hyperparameter search
 │       └── web_app.py                    # Streamlit visual analytics app
-├── tests/                                # Automated unit & regression test suite (55 tests)
+├── tests/                                # Automated unit & regression test suite
 │   ├── test_data.py                      # Split boundaries & masking tests
-│   ├── test_export.py                    # Model artifact serialization tests
+│   ├── test_export.py                    # Model serialization and artifact loader tests
 │   ├── test_features.py                  # Temporal & spatial lag features tests
 │   ├── test_graph.py                     # Distance adjacency structure tests
-│   ├── test_hybrid.py                    # Residual spatial hybrid model tests
+│   ├── test_hybrid.py                    # Residual Spatial Hybrid architecture tests
 │   ├── test_init.py                      # Package exports & lazy attribute tests
-│   ├── test_metrics.py                   # Masked evaluation metric tests
-│   ├── test_models.py                    # PyTorch GAT forward pass & layer tests
+│   ├── test_metrics.py                   # Masked evaluation & error distribution tests
+│   ├── test_models.py                    # PyTorch GAT forward shapes & layer norm tests
 │   ├── test_pipeline.py                  # End-to-end component tests
-│   ├── test_scripts.py                   # Script & CLI verification tests
-│   ├── test_tuning.py                    # Forward-chaining CV tests
+│   ├── test_scripts.py                   # CLI verification, persistence & evaluation tests
+│   ├── test_tuning.py                    # Forward-chaining CV & tuning tests
 │   └── test_web_app.py                   # Streamlit AppTest integration tests
 ├── LICENSE                               # MIT Open-Source License
 ├── pyproject.toml                        # Build configuration & packaging specs
@@ -668,7 +670,7 @@ source .venv/bin/activate
 
 ### Step 2: Install Dependencies & Editable Package
 ```bash
-cd Traffic-Flow-Prediction
+cd intelligent-traffic-forecasting
 pip install -r requirements.txt
 pip install -e .
 ```
@@ -691,24 +693,34 @@ streamlit run src/traffic_prediction/web_app.py
 ```
 Open `http://localhost:8501` in your browser to explore metrics and forecast visualizations.
 
+### Step 6: CLI Prediction Evaluation & Benchmark Reporting
+Evaluate exported predictions with tail percentile error profiling and generate the executive benchmark summary:
+```bash
+# Evaluate test split predictions across all models with peak/off-peak stratification:
+python scripts/evaluate_predictions.py
+
+# Generate executive benchmark markdown table and degradation analysis:
+python scripts/generate_benchmark_summary.py
+```
+
 ---
 
 ## 14. Automated Test Suite
 
-A modular test suite of 55 unit and regression tests is implemented across `tests/` covering all pipeline, model, and interface components:
+A modular test suite of unit and regression tests is implemented across `tests/` covering all pipeline, model, and CLI components:
 
 * [`tests/test_data.py`](tests/test_data.py): Timeline validation, 5-minute interval spacing, chronological splitting, and causal forward-fill imputation.
 * [`tests/test_features.py`](tests/test_features.py): Cyclic time encodings, autoregressive speed lags, spatial neighbor aggregations, rolling window statistics, and panel feature matrices.
-* [`tests/test_graph.py`](tests/test_graph.py): Gaussian distance adjacency construction, directed distance adjacency, dual diffusion transition matrices, thresholding, strict symmetry, and self-loop guarantees.
-* [`tests/test_metrics.py`](tests/test_metrics.py): Masked MAE, RMSE, and MAPE calculations over valid non-zero targets, plus peak/off-peak masks.
+* [`tests/test_graph.py`](tests/test_graph.py): Gaussian distance adjacency construction, thresholding, directed adjacency, dual diffusion operators, strict symmetry, and self-loop guarantees.
+* [`tests/test_metrics.py`](tests/test_metrics.py): Masked MAE, RMSE, and MAPE calculations over valid non-zero targets, peak/off-peak masks, and tail error percentile profiling.
 * [`tests/test_models.py`](tests/test_models.py): PyTorch `GraphAttentionLayer` and `GraphAttentionNetwork` forward shape assertions, layer normalization, and parameter validation.
-* [`tests/test_hybrid.py`](tests/test_hybrid.py): `ResidualSpatialHybrid` and `ResidualSpatialGAT` forward pass assertions, residual fitting, and composite prediction.
-* [`tests/test_export.py`](tests/test_export.py): `ModelArtifact` metadata serialization, disk persistence, and round-trip inference loading.
+* [`tests/test_hybrid.py`](tests/test_hybrid.py): Residual Spatial Hybrid architecture, residual loss fitting, and additive prediction corrections.
+* [`tests/test_export.py`](tests/test_export.py): Model artifact serialization, metadata preservation, and joblib/PyTorch loading.
 * [`tests/test_tuning.py`](tests/test_tuning.py): Leakage-free forward-chaining cross-validation splits, Random Forest, and XGBoost chronological tuning.
-* [`tests/test_scripts.py`](tests/test_scripts.py): Data verification utilities and multi-horizon sensor persistence profiling.
+* [`tests/test_scripts.py`](tests/test_scripts.py): Data verification, multi-horizon persistence profiling, prediction evaluation CLI, and benchmark report generation.
+* [`tests/test_web_app.py`](tests/test_web_app.py): Automated Streamlit AppTest integration tests verifying dashboard tab rendering.
 * [`tests/test_pipeline.py`](tests/test_pipeline.py): End-to-end integration tests and artifact presence checks.
-* [`tests/test_init.py`](tests/test_init.py): Top-level package exports and dynamic attribute loading.
-* [`tests/test_web_app.py`](tests/test_web_app.py): Automated Streamlit `AppTest` full render and interactive multi-tab component verification.
+* [`tests/test_init.py`](tests/test_init.py): Top-level package exports, lazy-loading import guards, and dynamic attribute loading.
 
 Run all tests via:
 ```bash
