@@ -30,8 +30,8 @@
 **Team ID**:`T020`  
 **Course**: Advanced Machine Learning (AML)  
 **Institution**: Newton School of Technology, Rishihood University  
-**Academic Report**: [View / Download Official Report (PDF)](report/Team_T020_Report.pdf)  
-**Project Presentation**: [View / Download Presentation Slides (PDF)](report/Team_T020_Presentation.pdf)
+**Academic Report**: [View / Download Official Report (PDF)](report/DL_report_T020.pdf)  
+**Project Presentation**: [View / Download Presentation Slides (PDF)](report/DL_ppt_T020.pdf)
 
 | Student Name | Enrollment Number | Institutional Email |
 | :--- | :---: | :--- |
@@ -640,8 +640,8 @@ Traffic-Flow-Prediction/
 │   ├── 09_signal_simulation.ipynb
 │   └── 10_residual_hybrid_model.ipynb   # Residual Spatial Hybrid (RF + GAT) architecture
 ├── report/                               # Academic report and presentation
-│   ├── Team_T020_Report.pdf              # Official compiled IEEE evaluation report (PDF)
-│   └── Team_T020_Presentation.pdf        # Official presentation slide deck (PDF)
+│   ├── DL_report_T020.pdf              # Official compiled IEEE evaluation report (PDF)
+│   └── DL_ppt_T020.pdf        # Official presentation slide deck (PDF)
 ├── results/                              # Generated research outputs
 │   ├── figures/                          # Publication-grade visualization figures (01 to 31)
 │   ├── metrics/                          # Benchmark CSV tables, executive report & PyTorch weights
