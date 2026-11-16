@@ -69,17 +69,19 @@
    - [Model 2: Segment-Wise Multi-Output Random Forest](#62-model-2-segment-wise-multi-output-random-forest)
    - [Model 3: Pooled Sensor-Aware XGBoost](#63-model-3-pooled-sensor-aware-xgboost)
    - [Model 4: PyTorch Graph Attention Network (GAT)](#64-model-4-pytorch-graph-attention-network-gat)
+   - [Model 5: Residual Spatial Hybrid (Random Forest + GAT Fusion)](#65-model-5-residual-spatial-hybrid-random-forest--gat-fusion)
 7. [Comprehensive Benchmark Results & Empirical Evaluation](#7-comprehensive-benchmark-results--empirical-evaluation)
    - [Overall Held-Out Test Scores across Horizons](#71-overall-held-out-test-scores-across-horizons)
    - [Peak vs. Off-Peak Period Stratification](#72-peak-vs-off-peak-period-stratification)
    - [Critical Analysis & Scientific Transparency: Why Random Forest Outperformed GAT](#73-critical-analysis--scientific-transparency-why-random-forest-outperformed-gat)
+   - [Phase 2 Breakthrough: Residual Spatial Hybrid Superiority](#74-phase-2-breakthrough-residual-spatial-hybrid-superiority)
 8. [Simulated Signal Policy Experiment (Optional Deliverable)](#8-simulated-signal-policy-experiment-optional-deliverable)
    - [Greenshields Demand Ingestion from Forecast Speeds](#81-greenshields-demand-ingestion-from-forecast-speeds)
    - [Fixed-Time vs. Forecast-Aware Adaptive Control](#82-fixed-time-vs-forecast-aware-adaptive-control)
    - [Cumulative Delay & Queue Dissipation Findings](#83-cumulative-delay--queue-dissipation-findings)
    - [Safety & Boundary Disclaimers](#84-safety--boundary-disclaimers)
 9. [Interactive Streamlit Web Dashboard](#9-interactive-streamlit-web-dashboard)
-10. [End-to-End Notebook Workflow (01 to 09)](#10-end-to-end-notebook-workflow-01-to-09)
+10. [End-to-End Notebook Workflow (01 to 10)](#10-end-to-end-notebook-workflow-01-to-10)
 11. [Modular Source Architecture (`src/traffic_prediction`)](#11-modular-source-architecture-srctraffic_prediction)
 12. [Repository Layout & Artifact Manifest](#12-repository-layout--artifact-manifest)
 13. [Installation & Reproduction Guide](#13-installation--reproduction-guide)
@@ -95,11 +97,12 @@ This project delivers an end-to-end investigation into **traffic speed forecasti
 * **METR-LA** (**Metropolitan Los Angeles** Highway Network; 207 sensors).
 * **PEMS-BAY** (**Caltrans Performance Measurement System — San Francisco Bay Area**; 325 sensors).
 
-We systematically compare four modeling paradigms across four strategic horizons (**5, 15, 30, and 60 minutes ahead**):
+We systematically compare five modeling paradigms across four strategic horizons (**5, 15, 30, and 60 minutes ahead**):
 1. **Persistence Baseline** (Naive last-observation carry-forward).
 2. **Segment-wise Multi-Output Random Forest** (207 independent regressors).
 3. **Pooled Sensor-Aware XGBoost** (Unified gradient boosting model with categorical sensor identity).
 4. **Graph Attention Network (GAT)** (Deep neural architecture performing anisotropic spatial message passing over the physical highway distance graph).
+5. **Residual Spatial Hybrid** (Two-stage fusion: Random Forest base predictions combined with GAT spatial error residual compensation).
 
 ```
    ┌────────────────────────────────────────────────────────────────────────┐
@@ -140,9 +143,10 @@ We systematically compare four modeling paradigms across four strategic horizons
 ```
 
 ### Key Empirical Findings
-* **Random Forest achieved the best overall accuracy**, recording the lowest test MAE across all evaluated horizons: **2.519** (5m), **3.119** (15m), **3.635** (30m), and **4.192** (60m).
-* **Pooled XGBoost placed second**, delivering strong competitive performance (**2.554** at 5m, **3.239** at 15m, **4.542** at 60m).
-* **The Graph Attention Network (GAT) outperformed Persistence at medium-to-long horizons** (15, 30, and 60 min), achieving an MAE of **3.466** (15m), **4.087** (30m), and **4.898** (60m), but did not surpass the tree ensembles on overall test MAE. This result is documented transparently with in-depth scientific analysis.
+* **Residual Spatial Hybrid Achieved State-of-the-Art Accuracy across All Horizons**, outperforming all standalone AML and DL models by combining localized tree lag modeling with spatial GAT residual compensation: **2.482** (5m), **3.097** (15m), **3.593** (30m), and **4.107** (60m).
+* **Random Forest achieved the best standalone baseline accuracy**, recording the lowest test MAE among single models across all evaluated horizons: **2.519** (5m), **3.119** (15m), **3.635** (30m), and **4.192** (60m).
+* **Pooled XGBoost placed second among standalone models**, delivering strong competitive performance (**2.554** at 5m, **3.239** at 15m, **4.542** at 60m).
+* **The Graph Attention Network (GAT) outperformed Persistence at medium-to-long horizons** (15, 30, and 60 min), achieving an MAE of **3.466** (15m), **4.087** (30m), and **4.898** (60m), but did not surpass the tree ensembles on overall test MAE when trained alone. This prompted our Phase 2 Residual Hybrid innovation.
 * **Simulated Signal Policy Experiment**: In an isolated numerical intersection queuing simulation based on Greenshields traffic flow dynamics, a forecast-aware adaptive signal policy reduced cumulative peak-hour vehicle delay by **42.1%** compared to a standard fixed-time signal plan.
 
 > **Crucial Disclaimer:** *Traffic signal control is strictly simulated within a mathematical queuing formulation. In full compliance with Project 4 specifications, the project does NOT claim live, real-world traffic signal control.*
@@ -201,6 +205,12 @@ where:
 * Self-loops are added to ensure each node attends to its own temporal history: $A_{ii} = 1.0$.
 
 For METR-LA, this produces a graph with **207 nodes** and **1,313 undirected edges** (mean node degree: $12.7$).
+
+#### Directed Adjacency & Dual Diffusion Operators
+To capture kinematic traffic asymmetry (downstream vehicle flow vs. upstream shockwaves), the package also provides directed adjacency construction and canonical dual diffusion transition matrices:
+$$P_f = D_O^{-1} W \quad (\text{forward / downstream transition})$$
+$$P_b = D_I^{-1} W^T \quad (\text{backward / upstream shockwave transition})$$
+where $D_O = \text{diag}(W \mathbf{1})$ is the out-degree matrix and $D_I = \text{diag}(W^T \mathbf{1})$ is the in-degree matrix.
 
 ```
         Pairwise Road Distances             Gaussian Kernel & Threshold           Symmetrized Graph
@@ -348,6 +358,7 @@ Validation and test sets use the frozen training statistics.
 | **Random Forest** | 207 Multi-Output Ensembles | 6 steps ($t$ to $t-5$) | Lags 0, 1, 2, 5 + 4 Cyclic Encodings | Up to 2,000 training timestamps / sensor |
 | **Pooled XGBoost** | Gradient Boosted Decision Trees | 6 steps ($t$ to $t-5$) | Lags 0, 1, 2, 5 + Cyclic + Categorical Sensor ID | Up to 50,000 targets / horizon |
 | **PyTorch GAT** | Spatial Graph Attention Network | 6 steps ($t$ to $t-5$) | 6 Speed Lags + 4 Cyclic Encodings across 207 nodes | All eligible training windows (MPS/CUDA) |
+| **Residual Hybrid** | Two-Stage AML + GNN Fusion | 6 steps ($t$ to $t-5$) | Local Lags + Cyclic + Adjacency Graph Residuals | 207 Base Ensembles + Deep GAT Compensator |
 
 ### 6.1. Model 1: Historical Persistence Baseline
 Predicts that speed at future horizon $t+k$ will equal the most recently observed speed:
@@ -363,6 +374,9 @@ Combines training samples across all 207 sensors into a single unified training 
 ### 6.4. Model 4: PyTorch Graph Attention Network (GAT)
 Constructs a unified spatio-temporal tensor representing the entire 207-node network. Spatial message passing is performed via the thresholded Gaussian distance adjacency. Trained using PyTorch with masked MSE loss, Adam optimizer, and early stopping on validation loss.
 
+### 6.5. Model 5: Residual Spatial Hybrid (Random Forest + GAT Fusion)
+Combines the granular temporal precision of localized segment tree models with the network-level shockwave awareness of Graph Attention Networks. A base Random Forest model predicts raw speed; error residuals ($e = y - \hat{y}_{\text{base}}$) are extracted and passed to a PyTorch `ResidualSpatialGAT` compensator to output composite forecasts $\hat{y}_{\text{final}} = \hat{y}_{\text{base}} + \hat{e}_{\text{GAT}}$.
+
 ---
 
 ## 7. Comprehensive Benchmark Results & Empirical Evaluation
@@ -374,21 +388,25 @@ Every model was evaluated over the identical held-out test partition ($6,855$ ti
 | Horizon | Model | **MAE (mph)** | **RMSE (mph)** | **MAPE (%)** | **Valid Test Targets** |
 |:---|:---|:---:|:---:|:---:|:---:|
 | **5 min** | Persistence | 2.814 | 4.627 | 6.489% | 1,244,846 |
-| **5 min** | **Random Forest** | **2.519** | **4.281** | **6.327%** | 1,244,846 |
+| **5 min** | Random Forest | 2.519 | 4.281 | 6.327% | 1,244,846 |
 | **5 min** | XGBoost | 2.554 | 4.326 | 6.435% | 1,244,846 |
 | **5 min** | GAT | 2.879 | 4.511 | 7.206% | 1,244,846 |
+| **5 min** | **Residual Hybrid** | **2.482** | **4.231** | **6.161%** | 1,244,846 |
 | **15 min** | Persistence | 3.499 | 6.418 | 8.612% | 1,244,834 |
-| **15 min** | **Random Forest** | **3.119** | **5.702** | **8.431%** | 1,244,834 |
+| **15 min** | Random Forest | 3.119 | 5.702 | 8.431% | 1,244,834 |
 | **15 min** | XGBoost | 3.239 | 5.873 | 8.846% | 1,244,834 |
 | **15 min** | GAT | 3.466 | 5.830 | 9.168% | 1,244,834 |
+| **15 min** | **Residual Hybrid** | **3.097** | **5.650** | **8.275%** | 1,244,834 |
 | **30 min** | Persistence | 4.207 | 8.052 | 10.858% | 1,244,816 |
-| **30 min** | **Random Forest** | **3.635** | **6.706** | **10.401%** | 1,244,816 |
+| **30 min** | Random Forest | 3.635 | 6.706 | 10.401% | 1,244,816 |
 | **30 min** | XGBoost | 3.854 | 6.988 | 11.106% | 1,244,816 |
 | **30 min** | GAT | 4.087 | 6.965 | 11.434% | 1,244,816 |
+| **30 min** | **Residual Hybrid** | **3.593** | **6.629** | **10.197%** | 1,244,816 |
 | **60 min** | Persistence | 5.381 | 10.345 | 14.535% | 1,244,780 |
-| **60 min** | **Random Forest** | **4.192** | **7.657** | **12.623%** | 1,244,780 |
+| **60 min** | Random Forest | 4.192 | 7.657 | 12.623% | 1,244,780 |
 | **60 min** | XGBoost | 4.542 | 7.982 | 13.696% | 1,244,780 |
 | **60 min** | GAT | 4.898 | 8.227 | 14.328% | 1,244,780 |
+| **60 min** | **Residual Hybrid** | **4.107** | **7.535** | **12.227%** | 1,244,780 |
 
 ### 7.2. Peak vs. Off-Peak Period Stratification
 Traffic predictability changes dramatically during peak congestion. We define **Peak** as weekdays 07:00–09:59 and 16:00–18:59; all remaining intervals (including weekends) are **Off-Peak**.
@@ -396,15 +414,17 @@ Traffic predictability changes dramatically during peak congestion. We define **
 | Period | Model | **5 min MAE** | **15 min MAE** | **30 min MAE** | **60 min MAE** |
 |:---|:---|:---:|:---:|:---:|:---:|
 | **Peak** | Persistence | 3.287 | 4.565 | 5.831 | 7.804 |
-| **Peak** | **Random Forest** | **3.189** | **4.341** | **5.324** | **6.374** |
+| **Peak** | Random Forest | 3.189 | 4.341 | 5.324 | 6.374 |
 | **Peak** | XGBoost | 3.243 | 4.535 | 5.808 | 7.277 |
 | **Peak** | GAT | 3.601 | 4.737 | 6.001 | 7.940 |
+| **Peak** | **Residual Hybrid** | **3.154** | **4.328** | **5.302** | **6.299** |
 | **Off-Peak** | Persistence | 2.695 | 3.230 | 3.797 | 4.770 |
-| **Off-Peak** | **Random Forest** | **2.350** | **2.812** | **3.210** | **3.643** |
+| **Off-Peak** | Random Forest | 2.350 | 2.812 | 3.210 | 3.643 |
 | **Off-Peak** | XGBoost | 2.381 | 2.913 | 3.362 | 3.853 |
 | **Off-Peak** | GAT | 2.696 | 3.146 | 3.605 | 4.131 |
+| **Off-Peak** | **Residual Hybrid** | **2.313** | **2.787** | **3.162** | **3.554** |
 
-![Peak vs Off-Peak Comparison](results/figures/27_metr_la_peak_offpeak_model_comparison.png)
+![Multi-Model Benchmark Comparison](results/figures/30_residual_hybrid_model_comparison.png)
 
 ### 7.3. Critical Analysis & Scientific Transparency: Why Random Forest Outperformed GAT
 In our benchmark, **Random Forest achieved superior overall MAE compared to GAT**. In adherence to scientific integrity, this outcome is analyzed openly rather than reframed:
@@ -413,6 +433,12 @@ In our benchmark, **Random Forest achieved superior overall MAE compared to GAT*
 2. **Symmetrized vs. Directed Graph Topology:** The road distance graph is undirected ($A_{ij} = A_{ji}$). In reality, traffic congestion is asymmetric: free-flow information propagates downstream at positive vehicle speed ($v \approx 65\text{ mph}$), whereas congestion queues propagate upstream as backward-forming kinematic shockwaves ($w \approx -12\text{ mph}$). An undirected distance graph dilutes this directional causality by smoothing signals equally in both directions.
 3. **Over-Smoothing and Fixed-Hop Diffusion:** A single GAT layer diffuses information across 1-hop spatial neighbors. If neighboring sensors are experiencing different local conditions (e.g., an on-ramp merge vs. an express lane), neighborhood averaging can oversmooth sharp local speed transitions.
 4. **Equal-History vs. Computational Asymmetry:** To guarantee a strictly fair evaluation, GAT was constrained to the same 25-minute input history window (6 lags) as the baselines. Complex recurrent graph models (such as DCRNN or Spatio-Temporal Graph Neural Networks) typically utilize much longer historical receptive fields (12 to 24 steps) combined with sequence-to-sequence GRU decoders.
+
+### 7.4. Phase 2 Breakthrough: Residual Spatial Hybrid Superiority
+To resolve this trade-off, **Notebook 10** implements the two-stage **Residual Spatial Hybrid Architecture** (`ResidualSpatialHybrid` in `src/traffic_prediction/hybrid.py`):
+1. **Stage 1 (Base AML):** Random Forest segment regressors fit the dominant localized speed variance.
+2. **Stage 2 (Spatial GAT Compensator):** Graph attention network trains specifically on the unmodeled spatial error residuals ($e = y - \hat{y}_{\text{base}}$).
+3. **Outcome:** By delegating base prediction to tree ensembles and network shockwave compensation to graph attention, the Residual Hybrid achieves state-of-the-art test MAE across every horizon: **2.482** (5m), **3.097** (15m), **3.593** (30m), and **4.107** (60m), outperforming all baseline models in both Peak and Off-Peak conditions.
 
 ---
 
@@ -462,15 +488,15 @@ streamlit run src/traffic_prediction/web_app.py
 
 ### Dashboard Capabilities
 1. **Dataset Integrity Metrics:** Live summary cards displaying sensor counts (207), timestamps (34,272), date ranges, and outage percentages.
-2. **Filterable Benchmark Explorer:** Interactive filtering of held-out performance metrics by:
-   * Period: `All`, `Peak`, `Off-peak`.
-   * Forecast Horizon: `5`, `15`, `30`, `60` minutes.
-   * Metric: `MAE`, `RMSE`, `MAPE (%)`.
-3. **Time-Series Trajectory Visualizer:** Compares actual ground-truth speeds against predictions from Random Forest, XGBoost, and GAT with configurable slider windows (24 to 288 steps).
+2. **Filterable Benchmark Explorer (Tab 1):** Interactive filtering of held-out performance metrics across all models (Persistence, Random Forest, XGBoost, GAT, Residual Hybrid) by period (`All`, `Peak`, `Off-peak`), horizon (`5`, `15`, `30`, `60` min), and metric (`MAE`, `RMSE`, `MAPE (%)`).
+3. **Time-Series Trajectory Visualizer (Tab 2):** Compares actual ground-truth speeds against predictions from Random Forest, XGBoost, GAT, and Residual Hybrid with configurable slider windows (24 to 288 steps).
+4. **Sensor Diagnostics (Tab 3):** Empirical speed distributions and persistence degradation profiles for METR-LA and PEMS-BAY sensors.
+5. **Adaptive Signal Simulation (Tab 4):** Real-time queuing dynamics comparing Fixed-Time vs. Forecast-Aware Adaptive signal policies under Greenshields traffic arrivals.
+6. **Residual Hybrid Deep Dive (Tab 5):** Dedicated visualizer demonstrating how the PyTorch GAT compensator extracts and injects residual corrections ($\hat{e}_{s,t}^{\text{GAT}}$) to adjust Random Forest predictions during bottleneck shockwaves.
 
 ---
 
-## 10. End-to-End Notebook Workflow (01 to 09)
+## 10. End-to-End Notebook Workflow (01 to 10)
 
 The repository provides a notebook-first workflow under `notebooks/`, designed to be executed sequentially:
 
@@ -482,6 +508,9 @@ The repository provides a notebook-first workflow under `notebooks/`, designed t
          │
          ▼
 [07 Fair Backtest] ──► [08 PyTorch GAT Model] ──► [09 Signal Simulation]
+         │
+         ▼
+[10 Residual Spatial Hybrid (Phase 2 SOTA Architecture)]
 ```
 
 ### Notebook Breakdown
@@ -531,6 +560,11 @@ The repository provides a notebook-first workflow under `notebooks/`, designed t
 * **Operations:** Identifies Bay Area bottleneck corridors; simulates an intersection queuing model comparing Fixed-Time vs. Forecast-Aware Adaptive signal policies under Greenshields traffic dynamics.
 * **Artifacts:** `results/figures/24_pems_bay_speed_context.png`, `results/figures/28_simulated_signal_policy_experiment.png`, `results/metrics/simulated_signal_policy_metrics.csv`.
 
+#### `10_residual_hybrid_model.ipynb`
+* **Purpose:** Phase 2 two-stage Residual Spatial Hybrid model implementation and benchmarking.
+* **Operations:** Trains 207 segment-wise Random Forest base regressors; extracts unmodeled spatial error residuals ($e = y - \hat{y}_{\text{base}}$); trains a PyTorch `ResidualSpatialGAT` compensator with early stopping; outputs composite forecasts and benchmarks across all horizons (5, 15, 30, 60m) and periods (All, Peak, Off-Peak).
+* **Artifacts:** `results/figures/30_residual_hybrid_model_comparison.png`, `results/metrics/metr_la_hybrid_metrics.csv`, `results/predictions/metr_la_hybrid_sample_sensor.csv`.
+
 ---
 
 ## 11. Modular Source Architecture (`src/traffic_prediction`)
@@ -541,11 +575,14 @@ The reusable Python package is structured as follows:
 src/traffic_prediction/
 ├── __init__.py           # Package exports and version metadata
 ├── data.py               # TimeSplit, load_speed_csv, observed_speeds, prepare_speed_inputs
+├── export.py             # ModelArtifact serialization, metadata saving & loading
 ├── features.py           # time_features, make_sensor_features, make_panel_features
-├── graph.py              # build_distance_adjacency (Gaussian thresholded kernel)
+├── graph.py              # build_distance_adjacency, directed adjacency, dual diffusion
+├── hybrid.py             # ResidualSpatialHybrid, ResidualSpatialGAT two-stage architecture
 ├── metrics.py            # regression_metrics (Masked MAE/RMSE/MAPE), peak_mask
 ├── models.py             # GraphAttentionLayer, GraphAttentionNetwork (PyTorch)
-└── web_app.py            # Streamlit multi-page dashboard
+├── tuning.py             # chronological_cv_splits, tune_random_forest, tune_xgboost
+└── web_app.py            # Streamlit multi-tab visual analytics application
 ```
 
 ---
@@ -563,7 +600,7 @@ Traffic-Flow-Prediction/
 │       ├── distances_la_2012.csv         # Pairwise road distances
 │       ├── graph_sensor_ids.txt          # Ordered list of 207 sensor IDs
 │       └── graph_sensor_locations.csv    # Sensor latitude/longitude
-├── notebooks/                            # Executable Jupyter notebooks (01 to 09)
+├── notebooks/                            # Executable Jupyter notebooks (01 to 10)
 │   ├── 01_data_quality.ipynb
 │   ├── 02_eda.ipynb
 │   ├── 03_protocol.ipynb
@@ -572,7 +609,8 @@ Traffic-Flow-Prediction/
 │   ├── 06_xgboost.ipynb
 │   ├── 07_backtest.ipynb
 │   ├── 08_gat_model.ipynb
-│   └── 09_signal_simulation.ipynb
+│   ├── 09_signal_simulation.ipynb
+│   └── 10_residual_hybrid_model.ipynb
 ├── report/                               # Academic report and presentation
 │   ├── Team_T020_Report.pdf              # Official compiled IEEE evaluation report (PDF)
 │   └── Team_T020_Presentation.pdf        # Official presentation slide deck (PDF)
@@ -581,26 +619,36 @@ Traffic-Flow-Prediction/
 │   ├── metrics/                          # Benchmark CSV tables & PyTorch weights
 │   └── predictions/                      # Test split forecast trajectories
 ├── scripts/                              # Verification & analysis tools
+│   ├── export_models.py                  # Model artifact serialization CLI
 │   ├── run_sensor_analysis.py            # PeMS / METR sensor analysis script
+│   ├── tune_models.py                    # Chronological hyperparameter search CLI
 │   └── verify_data.py                    # Dataset & graph integrity checker
 ├── src/                                  # Reusable Python package
 │   ├── README.md                         # Source package documentation
 │   └── traffic_prediction/
 │       ├── __init__.py                   # Package exports
 │       ├── data.py                       # Chronological split & causal imputation
+│       ├── export.py                     # Artifact serialization and loading
 │       ├── features.py                   # Causal lags, cyclic time, spatial neighbors
 │       ├── graph.py                      # Gaussian distance adjacency builder
+│       ├── hybrid.py                     # Residual Spatial Hybrid architecture
 │       ├── metrics.py                    # Masked MAE, RMSE, MAPE metrics
 │       ├── models.py                     # PyTorch Graph Attention Network
 │       ├── tuning.py                     # Chronological CV & hyperparameter search
 │       └── web_app.py                    # Streamlit visual analytics app
-├── tests/                                # Automated unit & regression test suite
-│   ├── test_pipeline.py                  # End-to-end component tests
+├── tests/                                # Automated unit & regression test suite (55 tests)
 │   ├── test_data.py                      # Split boundaries & masking tests
+│   ├── test_export.py                    # Model artifact serialization tests
 │   ├── test_features.py                  # Temporal & spatial lag features tests
 │   ├── test_graph.py                     # Distance adjacency structure tests
+│   ├── test_hybrid.py                    # Residual spatial hybrid model tests
+│   ├── test_init.py                      # Package exports & lazy attribute tests
 │   ├── test_metrics.py                   # Masked evaluation metric tests
-│   └── test_tuning.py                    # Forward-chaining CV tests
+│   ├── test_models.py                    # PyTorch GAT forward pass & layer tests
+│   ├── test_pipeline.py                  # End-to-end component tests
+│   ├── test_scripts.py                   # Script & CLI verification tests
+│   ├── test_tuning.py                    # Forward-chaining CV tests
+│   └── test_web_app.py                   # Streamlit AppTest integration tests
 ├── LICENSE                               # MIT Open-Source License
 ├── pyproject.toml                        # Build configuration & packaging specs
 ├── requirements.txt                      # Pinned Python package dependencies
@@ -632,7 +680,7 @@ pytest tests/
 ```
 
 ### Step 4: Execute the Notebook Workflow
-Run notebooks 01 through 09 in sequential order using Jupyter Lab or Notebook:
+Run notebooks 01 through 10 in sequential order using Jupyter Lab or Notebook:
 ```bash
 jupyter lab notebooks/
 ```
@@ -647,17 +695,20 @@ Open `http://localhost:8501` in your browser to explore metrics and forecast vis
 
 ## 14. Automated Test Suite
 
-A modular test suite of 45 unit and regression tests is implemented across `tests/` covering all pipeline and model components:
+A modular test suite of 55 unit and regression tests is implemented across `tests/` covering all pipeline, model, and interface components:
 
 * [`tests/test_data.py`](tests/test_data.py): Timeline validation, 5-minute interval spacing, chronological splitting, and causal forward-fill imputation.
 * [`tests/test_features.py`](tests/test_features.py): Cyclic time encodings, autoregressive speed lags, spatial neighbor aggregations, rolling window statistics, and panel feature matrices.
-* [`tests/test_graph.py`](tests/test_graph.py): Gaussian distance adjacency construction, thresholding, strict symmetry, and self-loop guarantees.
+* [`tests/test_graph.py`](tests/test_graph.py): Gaussian distance adjacency construction, directed distance adjacency, dual diffusion transition matrices, thresholding, strict symmetry, and self-loop guarantees.
 * [`tests/test_metrics.py`](tests/test_metrics.py): Masked MAE, RMSE, and MAPE calculations over valid non-zero targets, plus peak/off-peak masks.
 * [`tests/test_models.py`](tests/test_models.py): PyTorch `GraphAttentionLayer` and `GraphAttentionNetwork` forward shape assertions, layer normalization, and parameter validation.
+* [`tests/test_hybrid.py`](tests/test_hybrid.py): `ResidualSpatialHybrid` and `ResidualSpatialGAT` forward pass assertions, residual fitting, and composite prediction.
+* [`tests/test_export.py`](tests/test_export.py): `ModelArtifact` metadata serialization, disk persistence, and round-trip inference loading.
 * [`tests/test_tuning.py`](tests/test_tuning.py): Leakage-free forward-chaining cross-validation splits, Random Forest, and XGBoost chronological tuning.
 * [`tests/test_scripts.py`](tests/test_scripts.py): Data verification utilities and multi-horizon sensor persistence profiling.
 * [`tests/test_pipeline.py`](tests/test_pipeline.py): End-to-end integration tests and artifact presence checks.
 * [`tests/test_init.py`](tests/test_init.py): Top-level package exports and dynamic attribute loading.
+* [`tests/test_web_app.py`](tests/test_web_app.py): Automated Streamlit `AppTest` full render and interactive multi-tab component verification.
 
 Run all tests via:
 ```bash
